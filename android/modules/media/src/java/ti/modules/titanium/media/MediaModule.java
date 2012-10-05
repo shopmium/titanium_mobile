@@ -438,7 +438,10 @@ public class MediaModule extends KrollModule
 							Images.ImageColumns.DATE_TAKEN);
 						isDataValid = false;
 					}
-					if (c != null) {
+					if (c == null) {
+						dataPath = "file://" + imageFile.getAbsolutePath(); 
+					}
+					else {
 						try {
 							boolean isCursorValid = false;
 							if (data.getData() != null && isDataValid) {

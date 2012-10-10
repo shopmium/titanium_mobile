@@ -78,10 +78,11 @@
 	RELEASE_TO_NIL(uid);
 	RELEASE_TO_NIL(facebook);
 	RELEASE_TO_NIL(appid);
+	RELEASE_TO_NIL(urlSchemeSuffix);
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	NSString *uid_ = [defaults objectForKey:@"FBUserId"];
 	appid = [[defaults stringForKey:@"FBAppId"] copy];
-	facebook = [[Facebook alloc] initWithAppId:appid urlSchemeSuffix:nil andDelegate:self];
+	facebook = [[Facebook alloc] initWithAppId:appid urlSchemeSuffix:urlSchemeSuffix andDelegate:self];
 
 	VerboseLog(@"[DEBUG] facebook _restore, uid = %@",uid_);
 	if (uid_) 
@@ -107,6 +108,7 @@
 	RELEASE_TO_NIL(stateListeners);
 	RELEASE_TO_NIL(appid);
 	RELEASE_TO_NIL(permissions);
+	RELEASE_TO_NIL(urlSchemeSuffix);
 	RELEASE_TO_NIL(uid);
 	[super dealloc];
 }
@@ -143,7 +145,7 @@
 -(void)startup
 {
 	VerboseLog(@"[DEBUG] facebook startup");
-	
+	[facebook setUrlSchemeSuffix:'tototfaitduvelo'];
 	[super startup];
     forceDialogAuth = YES;
 	[self _restore];
@@ -335,6 +337,26 @@
 	RELEASE_TO_NIL(permissions);
 	permissions = [arg retain];
 }
+
+
+/** 
+ * Those two method have been add by Shopmium in 
+ * order to be able to configure urlSchemeSuffix 
+ *
+ */
+
+-(void)setUrlSchemeSuffix:(id)arg
+{
+	RELEASE_TO_NIL(urlSchemeSuffix);
+	urlSchemeSuffix = [arg copy];
+	[facebook setUrlSchemeSuffix:urlSchemeSuffix];
+}
+
+-(id)urlSchemeSuffix
+{
+	return urlSchemeSuffix;
+}
+
 
 /**
  * JS example:

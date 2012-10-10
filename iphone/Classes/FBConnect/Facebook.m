@@ -69,10 +69,10 @@ static void *finishedContext = @"finishedContext";
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // private
 
-
+// patched by shopmium. 
 - (id)initWithAppId:(NSString *)appId
         andDelegate:(id<FBSessionDelegate>)delegate {
-  self = [self initWithAppId:appId urlSchemeSuffix:nil andDelegate:delegate];
+  self = [self initWithAppId:appId urlSchemeSuffix:_urlSchemeSuffix andDelegate:delegate];
   return self;
 }
 

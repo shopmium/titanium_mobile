@@ -5,7 +5,7 @@
 # Author: Marshall Culpepper
 # Licensed under the Apache Public License v2 (see LICENSE.txt)
 
-import os, sys, platform, sqlite3, time, stat
+import os, sys, platform, sqlite3, time, stat, re
 from datetime import datetime, timedelta
 
 class DeltaList(list):
@@ -183,6 +183,8 @@ class Deltafy:
 	def scan_path(self, path, deltas):
 		for file in os.listdir(path):
 			absolute_path = os.path.join(path, file)
+			if re.match('.*Resources/assets.*', absolute_path):
+				continue
 			# reduce to just one stat, major speed up in windows
 			path_stat = os.stat(absolute_path)
 			if stat.S_ISDIR(path_stat.st_mode):

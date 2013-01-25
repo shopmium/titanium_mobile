@@ -140,9 +140,9 @@ def copy_assets_into_iphone_build(resources_dir, app_dir):
 			_to_file = re.sub('@200', '@2x', file)
 			if _to_file == file:
 				_to_file = re.sub('@100', '', file)
-
-			if _to_file == file:
-					continue
+			if _to_file == file and re.match('.*@.*', file):
+				# @150
+				continue
 			_from = os.path.join(root, file)
 			_to = os.path.join(_to_dir, _to_file)
 			shutil.copyfile(_from, _to)

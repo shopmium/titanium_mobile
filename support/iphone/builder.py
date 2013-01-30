@@ -126,27 +126,6 @@ def copy_module_resources(source, target, copy_all=False, force=False):
 				if os.path.exists(to_): os.remove(to_)
 				shutil.copyfile(from_, to_)
 
-def copy_assets_into_iphone_build(resources_dir, app_dir):
-	print "[SHOPMIUM] copying shopmium assets"
-	shopmium_assets_dir = os.path.join(resources_dir, 'assets/')
-	assets_build_dir= os.path.join(app_dir, 'images/')
-	for root, dirs, files in os.walk(shopmium_assets_dir):
-		_to_dir = os.path.join(assets_build_dir, re.sub(shopmium_assets_dir, '', root))
-
-		if not os.path.exists(_to_dir): 
-			os.makedirs(_to_dir)
-
-		for file in files:
-			_to_file = re.sub('@200', '@2x', file)
-			if _to_file == file:
-				_to_file = re.sub('@100', '', file)
-			if _to_file == file and re.match('.*@.*', file):
-				# @150
-				continue
-			_from = os.path.join(root, file)
-			_to = os.path.join(_to_dir, _to_file)
-			shutil.copyfile(_from, _to)
-
 # WARNING: This could be a time bomb waiting to happen, because it mangles
 # the app bundle name for NO REASON.  Or... does it?
 def make_app_name(s):
@@ -600,7 +579,6 @@ def main(args):
 				deploytype = 'production'
 		#Ensure the localization files are copied in the application directory
 		out_dir = os.path.join(os.environ['TARGET_BUILD_DIR'],os.environ['CONTENTS_FOLDER_PATH'])
-		copy_assets_into_iphone_build(os.path.join(project_dir, 'Resources'), out_dir)
 		localecompiler.LocaleCompiler(name,project_dir,devicefamily,deploytype,out_dir).compile()
 		compiler = Compiler(project_dir,appid,name,deploytype)
 		compiler.compileProject(xcode_build,devicefamily,iphone_version)

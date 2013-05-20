@@ -511,8 +511,8 @@ public class MediaModule extends KrollModule
 
 		private void moveImage(String source, String dest)
 		{
-      if (source == dest) {
-        Log.e(TAG, "source (" +source + ") eq to dest (" + dest + "). Not moving file");
+      if (source.equals(dest)) {
+        Log.d(TAG, "source (" +source + ") eq to dest (" + dest + "). Not moving file");
         return;
       }
 			try {

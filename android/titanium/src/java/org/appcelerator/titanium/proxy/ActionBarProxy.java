@@ -36,7 +36,6 @@ public class ActionBarProxy extends KrollProxy
 
 	private static final String SHOW_HOME_AS_UP = "showHomeAsUp";
 	private static final String BACKGROUND_IMAGE = "backgroundImage";
-	private static final String HOME_BUTTON_ENABLED = "homeButtonEnabled";
 	private static final String TITLE = "title";
 	private static final String LOGO = "logo";
 	private static final String ICON = "icon";
@@ -48,20 +47,6 @@ public class ActionBarProxy extends KrollProxy
 		super();
 		actionBar = activity.getActionBar();
 	}
-
-	@Kroll.method @Kroll.setProperty
-		public void setHomeButtonEnabled(boolean homeButtonEnabled)
-		{
-			if (Build.VERSION.SDK_INT >= TiC.API_LEVEL_ICE_CREAM_SANDWICH) {
-				if(TiApplication.isUIThread()) {
-					handlesetHomeButtonEnabled(homeButtonEnabled);
-				} else {
-					Message message = getMainHandler().obtainMessage(MSG_SET_HOME_BUTTON_ENABLED, homeButtonEnabled);
-					message.getData().putBoolean(HOME_BUTTON_ENABLED, homeButtonEnabled);
-					message.sendToTarget();
-				}
-			}
-		}
 
 	@Kroll.method @Kroll.setProperty
 	public void setDisplayHomeAsUp(boolean showHomeAsUp)
@@ -188,11 +173,6 @@ public class ActionBarProxy extends KrollProxy
 		}
 	}
 
-	private void handlesetHomeButtonEnabled(boolean homeButtonEnabled)
-	{
-		actionBar.setHomeButtonEnabled(homeButtonEnabled);
-	}
-
 	private void handlesetDisplayHomeAsUp(boolean showHomeAsUp)
 	{
 		actionBar.setDisplayHomeAsUpEnabled(showHomeAsUp);
@@ -239,7 +219,7 @@ public class ActionBarProxy extends KrollProxy
 				handleSetIcon(msg.getData().getString(ICON));
 				return true;
 			case MSG_SET_HOME_BUTTON_ENABLED:
-				handlesetHomeButtonEnabled(msg.getData().getBoolean(HOME_BUTTON_ENABLED));
+				actionBar.setHomeButtonEnabled(true);
 				return true;
 		}
 		return super.handleMessage(msg);

@@ -1693,9 +1693,11 @@ class Builder(object):
 		for abi in self.abis:
 			lib_source_dir = os.path.join(sdk_native_libs, abi)
 			lib_dest_dir = 'lib/%s/' % abi
-			if abi == 'x86' and ((not os.path.exists(lib_source_dir)) or self.deploy_type == 'production'):
+      # Shopmuim, we want to build full app for x86 arch, so we commented following three
+      # lines
+			#if abi == 'x86' and ((not os.path.exists(lib_source_dir)) or self.deploy_type == 'production'):
 				# x86 only in non-production builds for now.
-				continue
+				#continue
 
 			# libtiverify is always included
 			apk_zip.write(os.path.join(lib_source_dir, 'libtiverify.so'), lib_dest_dir + 'libtiverify.so')

@@ -140,7 +140,7 @@ public class MediaModule extends KrollModule
 	{
 		Activity activity = TiApplication.getInstance().getCurrentActivity();
 
-		Log.d(TAG, "showCamera called", Log.DEBUG_MODE);
+		Log.d(TAG, "showCamera called on device: " + Build.MANUFACTURER, Log.DEBUG_MODE);
 
 		KrollFunction successCallback = null;
 		KrollFunction cancelCallback = null;
@@ -289,7 +289,7 @@ public class MediaModule extends KrollModule
 	}
 
 	/**
-	 * Object that is used to wrap required fields for async processing when invoking 
+	 * Object that is used to wrap required fields for async processing when invoking
 	 * success, error , etc callbacks for camera
 	 */
 	private class CallbackWrapper
@@ -433,7 +433,7 @@ public class MediaModule extends KrollModule
 					if (data.getData() != null) {
 						c = activity.getContentResolver().query(data.getData(), projection, null, null, null);
 					}
-					if (c == null) {
+					if (c == null && !Build.MANUFACTURER.equals("Sony Ericsson")) {
 						c = activity.getContentResolver().query(Images.Media.EXTERNAL_CONTENT_URI, projection, null, null,
 							Images.ImageColumns.DATE_TAKEN);
 						isDataValid = false;
@@ -454,7 +454,7 @@ public class MediaModule extends KrollModule
 								bucketDisplayName = c.getString(4);
 								dataPath = c.getString(5);
 								dateTaken = c.getString(6);
-								
+
 								Log.d(TAG, "Image { title: " + title + " displayName: " + displayName + " mimeType: "
 									+ mimeType + " bucketId: " + bucketId + " bucketDisplayName: " + bucketDisplayName
 									+ " path: " + dataPath + " }", Log.DEBUG_MODE);

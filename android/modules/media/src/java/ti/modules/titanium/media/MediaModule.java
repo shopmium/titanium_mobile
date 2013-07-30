@@ -409,6 +409,13 @@ public class MediaModule extends KrollModule
 					processImage(activity);
 
 				} else {
+					// HACK: Avoid to return the last gallery photo on Sony Ericsson devices using Android 4.1.2
+					if (Build.MANUFACTURER.equals("Sony Ericsson") && Build.VERSION.RELEASE.equals("4.1.2")) {
+						Log.w(TAG, "Saving a picture to a Sony Ericsson device using Android 4.1.2");
+						processImage(activity);
+						return;
+					}
+
 					// Get the content information about the saved image
 					String[] projection = {
 						Images.Media.TITLE,
@@ -433,7 +440,7 @@ public class MediaModule extends KrollModule
 					if (data.getData() != null) {
 						c = activity.getContentResolver().query(data.getData(), projection, null, null, null);
 					}
-					if (c == null && !Build.MANUFACTURER.equals("Sony Ericsson")) {
+					if (c == null) {
 						c = activity.getContentResolver().query(Images.Media.EXTERNAL_CONTENT_URI, projection, null, null,
 							Images.ImageColumns.DATE_TAKEN);
 						isDataValid = false;

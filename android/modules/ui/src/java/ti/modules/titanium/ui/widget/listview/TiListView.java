@@ -275,6 +275,12 @@ public class TiListView extends TiUIView {
 		}
 	}
 	
+	@Override
+	public void registerForTouch()
+	{
+		registerForTouch(listView);
+	}
+	
 	public void processProperties(KrollDict d) {
 		
 		if (d.containsKey(TiC.PROPERTY_TEMPLATES)) {
@@ -357,6 +363,8 @@ public class TiListView extends TiUIView {
 		} else if (key.equals(TiC.PROPERTY_DEFAULT_ITEM_TEMPLATE) && newValue != null) {
 			defaultTemplateBinding = TiConvert.toString(newValue);
 			refreshItems();
+		} else {
+			super.propertyChanged(key, oldValue, newValue, proxy);
 		}
 	}
 
@@ -514,11 +522,9 @@ public class TiListView extends TiUIView {
 	
 	public void release() {
 		for (int i = 0; i < sections.size(); i++) {
-			sections.get(i).release();
+			sections.get(i).releaseViews();
 		}
-		for (String binding : templatesByBinding.keySet()) {
-			templatesByBinding.get(binding).release();
-		}
+		
 		templatesByBinding.clear();
 		sections.clear();
 		if (listView != null) {

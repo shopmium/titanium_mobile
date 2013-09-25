@@ -147,6 +147,11 @@
 		return;
 	}
 	
+    if ([arg conformsToProtocol:@protocol(TiWindowProtocol)]) {
+        DebugLog(@"Can not add a window as a child of a view. Returning");
+        return;
+    }
+    
 	if ([NSThread isMainThread])
 	{
 		pthread_rwlock_wrlock(&childrenLock);
@@ -351,7 +356,6 @@
 	TiAnimation * newAnimation = [TiAnimation animationFromArg:arg context:[self executionContext] create:NO];
 	[self rememberProxy:newAnimation];
 	TiThreadPerformOnMainThread(^{
-		[parent contentsWillChange];
 		if ([view superview]==nil)
 		{
 			VerboseLog(@"Entering animation without a superview Parent is %@, props are %@",parent,dynprops);
@@ -1320,24 +1324,8 @@ LAYOUTFLAGS_SETTER(setHorizontalWrap,horizontalWrap,horizontalWrap,[self willCha
 
 -(CGRect)appFrame	//TODO: Why is this here? It doesn't have anything to do with a specific instance.
 {
-	CGRect result=[[UIScreen mainScreen] applicationFrame];
-	switch ([[UIApplication sharedApplication] statusBarOrientation])
-	{
-		case UIInterfaceOrientationLandscapeLeft:
-		case UIInterfaceOrientationLandscapeRight:
-		{
-			CGFloat leftMargin = result.origin.y;
-			CGFloat topMargin = result.origin.x;
-			CGFloat newHeight = result.size.width;
-			CGFloat newWidth = result.size.height;
-			result = CGRectMake(leftMargin, topMargin, newWidth, newHeight);
-			break;
-		}
-		default: {
-			break;
-		}
-	}
-	return result;
+	CGRect result = [[[[TiApp app] controller] view] bounds];
+    return result;
 }
 
 
@@ -1349,7 +1337,7 @@ LAYOUTFLAGS_SETTER(setHorizontalWrap,horizontalWrap,horizontalWrap,[self willCha
 	{
 		destroyLock = [[NSRecursiveLock alloc] init];
 		pthread_rwlock_init(&childrenLock, NULL);
-		bubbleParent = YES;
+		_bubbleParent = YES;
 	}
 	return self;
 }
@@ -1962,11 +1950,8 @@ if(OSAtomicTestAndSetBarrier(flagBit, &dirtyflags))	\
 
 -(void)parentSizeWillChange
 {
-//	if percent or undefined size, change size
-	if(TiDimensionIsUndefined(layoutProperties.width) ||
-			TiDimensionIsUndefined(layoutProperties.height) ||
-			TiDimensionIsPercent(layoutProperties.width) ||
-			TiDimensionIsPercent(layoutProperties.height))
+//	if not dip, change size
+	if(!TiDimensionIsDip(layoutProperties.width) || !TiDimensionIsDip(layoutProperties.height) )
 	{
 		[self willChangeSize];
 	}
@@ -2286,7 +2271,8 @@ if(OSAtomicTestAndSetBarrier(flagBit, &dirtyflags))	\
 
 -(BOOL)willBeRelaying
 {
-	return dirtyflags != 0;
+    DebugLog(@"DIRTY FLAGS %d WILLBERELAYING %d",dirtyflags, (*((char*)&dirtyflags) & (1 << (7 - TiRefreshViewEnqueued))));
+    return ((*((char*)&dirtyflags) & (1 << (7 - TiRefreshViewEnqueued))) != 0);
 }
 
 -(void)childWillResize:(TiViewProxy *)child
@@ -2784,10 +2770,12 @@ if(OSAtomicTestAndSetBarrier(flagBit, &dirtyflags))	\
 			[ourView insertSubview:childView atIndex:insertPosition];
 			pthread_rwlock_unlock(&childrenLock); // must release before calling resize
 			
-            if ( !CGSizeEqualToSize(child.sandboxBounds.size, bounds.size) ) {
-                //Child will not resize if sandbox size does not change
-                [self childWillResize:child];
-            }
+//            TIMOB-14488. This is a bad message. We should not be signalling a child
+//            resize to the parent when the parent is laying out the child.
+//            if ( !CGSizeEqualToSize(child.sandboxBounds.size, bounds.size) ) {
+//                //Child will not resize if sandbox size does not change
+//                [self childWillResize:child];
+//            }
 		}
 	}
 	[child setSandboxBounds:bounds];

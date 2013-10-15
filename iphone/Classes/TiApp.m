@@ -439,6 +439,7 @@ TI_INLINE void waitForMemoryPanicCleared();   //WARNING: This must never be run 
 
 -(void)applicationWillResignActive:(UIApplication *)application
 {
+	[launchOptions removeObjectForKey:@"url"];
 	[[NSNotificationCenter defaultCenter] postNotificationName:kTiSuspendNotification object:self];
 	
 	// suspend any image loading

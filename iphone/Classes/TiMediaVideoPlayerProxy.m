@@ -1070,7 +1070,6 @@ NSArray* moviePlayerKeys = nil;
 			playing = NO;
 			break;
 		case MPMoviePlaybackStatePlaying:
-			movie.controlStyle =  MPMovieControlStyleDefault;
 			playing = YES;
 			break;
 	}

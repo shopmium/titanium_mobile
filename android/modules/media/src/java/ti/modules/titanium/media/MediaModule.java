@@ -409,12 +409,6 @@ public class MediaModule extends KrollModule
 					processImage(activity);
 
 				} else {
-					// HACK: Avoid to return the last gallery photo on Sony Ericsson devices
-					if (Build.MANUFACTURER.equals("Sony Ericsson")) {
-						Log.w(TAG, "Saving a picture to a Sony Ericsson device");
-						processImage(activity);
-						return;
-					}
 
 					// Get the content information about the saved image
 					String[] projection = {

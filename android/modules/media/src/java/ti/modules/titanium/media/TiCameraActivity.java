@@ -292,7 +292,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 	/**
 	 * Computes the optimal preview size given the target display size and aspect ratio.
-	 * 
+	 *
 	 * @param supportPreviewSizes
 	 *            a list of preview sizes the camera supports
 	 * @param targetSize
@@ -391,6 +391,12 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		} else {
 			camera.takePicture(null, null, jpegCallback);
 		}
+	}
+
+	static public void hide()
+	{
+		cameraActivity.setResult(Activity.RESULT_OK);
+		cameraActivity.finish();
 	}
 
 	static PictureCallback jpegCallback = new PictureCallback()

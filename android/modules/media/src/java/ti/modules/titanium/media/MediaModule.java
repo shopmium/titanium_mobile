@@ -304,6 +304,16 @@ public class MediaModule extends KrollModule
 		activity.runOnUiThread(resultHandler);
 	}
 
+	@Kroll.method
+	public void hideCamera()
+	{
+		// make sure the preview / camera are open before trying to hide
+		if (TiCameraActivity.cameraActivity != null) {
+			TiCameraActivity.hide();
+		} else {
+			Log.e(TAG, "Camera preview is not open, unable to hide");
+		}
+	}
 	/**
 	 * Object that is used to wrap required fields for async processing when invoking
 	 * success, error , etc callbacks for camera

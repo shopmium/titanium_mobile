@@ -31,7 +31,6 @@ import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
-import android.hardware.Camera.ShutterCallback;
 import android.hardware.Camera.Size;
 import android.net.Uri;
 import android.os.Bundle;
@@ -62,7 +61,6 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	public static KrollObject callbackContext;
 	public static KrollFunction successCallback, errorCallback, cancelCallback;
 	public static boolean saveToPhotoGallery = false;
-	public static boolean autohide = true;
 
 	private static class PreviewLayout extends FrameLayout
 	{
@@ -246,15 +244,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	protected void onResume()
 	{
 		super.onResume();
-		if (camera == null) {
-			camera = Camera.open();
-		}
-		if (camera != null) {
-			supportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
-		} else {
-			onError(MediaModule.UNKNOWN_ERROR, "Unable to access the first back-facing camera.");
-			finish();
-		}
+
 		cameraActivity = this;
 		previewLayout.addView(preview, new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		cameraLayout.addView(localOverlayProxy.getOrCreateView().getNativeView(), new FrameLayout.LayoutParams(
@@ -302,7 +292,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 	/**
 	 * Computes the optimal preview size given the target display size and aspect ratio.
-	 *
+	 * 
 	 * @param supportPreviewSizes
 	 *            a list of preview sizes the camera supports
 	 * @param targetSize
@@ -394,7 +384,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				public void onAutoFocus(boolean success, Camera camera)
 				{
 					// Take the picture when the camera auto focus completes.
-					camera.takePicture(shutterCallback, null, jpegCallback);
+					camera.takePicture(null, null, jpegCallback);
 				}
 			};
 			camera.autoFocus(focusCallback);
@@ -402,26 +392,6 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			camera.takePicture(null, null, jpegCallback);
 		}
 	}
-
-
-	static public void hide()
-	{
-			cameraActivity.setResult(Activity.RESULT_OK);
-			cameraActivity.finish();
-	}
-
-	static ShutterCallback shutterCallback = new ShutterCallback()
-	{
-			// Just the presence of a shutter callback will
-			// allow the shutter click sound to occur (at least
-			// on Jelly Bean on a stock Google phone, which
-			// was remaining silent without this.)
-			@Override
-			public void onShutter()
-			{
-			// No-op
-			}
-	};
 
 	static PictureCallback jpegCallback = new PictureCallback()
 	{
@@ -438,11 +408,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			}
 
 			cancelCallback = null;
-			if (autohide) {
-				cameraActivity.finish();
-			} else {
-				camera.startPreview();
-			}
+			cameraActivity.finish();
 		}
 	};
 }

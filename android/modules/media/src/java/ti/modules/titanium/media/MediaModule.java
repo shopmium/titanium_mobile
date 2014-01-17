@@ -146,8 +146,6 @@ public class MediaModule extends KrollModule
 		KrollFunction successCallback = null;
 		KrollFunction cancelCallback = null;
 		KrollFunction errorCallback = null;
-		boolean autohide = true;
-		boolean saveToPhotoGallery = false;
 
 		if (options.containsKey("success")) {
 			successCallback = (KrollFunction) options.get("success");
@@ -159,15 +157,11 @@ public class MediaModule extends KrollModule
 			errorCallback = (KrollFunction) options.get("error");
 		}
 
-		Object autohideOption = options.get("autohide");
-		if (autohideOption != null) {
-			autohide = TiConvert.toBoolean(autohideOption);
+		boolean saveToPhotoGallery = false;
+		if (options.containsKey("saveToPhotoGallery")) {
+			saveToPhotoGallery = TiConvert.toBoolean(options.get("saveToPhotoGallery"));
 		}
 
-		Object saveToPhotoGalleryOption = options.get("saveToPhotoGallery");
-		if (saveToPhotoGalleryOption != null) {
-			saveToPhotoGallery = TiConvert.toBoolean(saveToPhotoGalleryOption);
-		}
 		// Use our own custom camera activity when an overlay is provided.
 		if (options.containsKey("overlay")) {
 			TiCameraActivity.overlayProxy = (TiViewProxy) options.get("overlay");
@@ -177,7 +171,6 @@ public class MediaModule extends KrollModule
 			TiCameraActivity.errorCallback = errorCallback;
 			TiCameraActivity.cancelCallback	= cancelCallback;
 			TiCameraActivity.saveToPhotoGallery = saveToPhotoGallery;
-			TiCameraActivity.autohide = autohide;
 
 			Intent intent = new Intent(activity, TiCameraActivity.class);
 			activity.startActivity(intent);
@@ -199,10 +192,6 @@ public class MediaModule extends KrollModule
 
 			if (errorCallback != null) {
 				errorCallback.call(getKrollObject(), new Object[] { createErrorResponse(NO_CAMERA, "Camera not available.") });
-				errorCallback.call(
-					getKrollObject(),
-					new Object[] { createErrorResponse(NO_CAMERA,
-						"Camera not available.") });
 			}
 
 			return;
@@ -212,7 +201,7 @@ public class MediaModule extends KrollModule
 		TiFileHelper tfh = TiFileHelper.getInstance();
 
 		TiIntentWrapper cameraIntent = new TiIntentWrapper(new Intent());
-		if (TiCameraActivity.overlayProxy == null) {
+		if(TiCameraActivity.overlayProxy == null) {
 			cameraIntent.getIntent().setAction(MediaStore.ACTION_IMAGE_CAPTURE);
 			cameraIntent.getIntent().addCategory(Intent.CATEGORY_DEFAULT);
 		} else {
@@ -313,17 +302,6 @@ public class MediaModule extends KrollModule
 		}
 
 		activity.runOnUiThread(resultHandler);
-	}
-
-	@Kroll.method
-	public void hideCamera()
-	{
-		// make sure the preview / camera are open before trying to hide
-		if (TiCameraActivity.cameraActivity != null) {
-			TiCameraActivity.hide();
-		} else {
-			Log.e(TAG, "Camera preview is not open, unable to hide");
-		}
 	}
 
 	/**

@@ -40,6 +40,11 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 
 public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Callback
 {
@@ -101,6 +106,11 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	}
 
 	@Override
+	public void onBackPressed() {
+	// back button nothing
+	}
+
+	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
@@ -120,16 +130,6 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		cameraLayout.setBackgroundColor(Color.BLACK);
 		cameraLayout.addView(previewLayout, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT,
 			LayoutParams.MATCH_PARENT, Gravity.CENTER));
-
-		setContentView(cameraLayout);
-
-		camera = Camera.open();
-		if (camera != null) {
-			supportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
-		} else {
-			onError(MediaModule.UNKNOWN_ERROR, "Unable to access the first back-facing camera.");
-			finish();
-		}
 	}
 
 	public void surfaceChanged(SurfaceHolder previewHolder, int format, int width, int height)
@@ -245,6 +245,16 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 	{
 		super.onResume();
 
+		setContentView(cameraLayout);
+		if (camera == null) {
+			camera = Camera.open();
+		}
+		if (camera != null) {
+			supportedPreviewSizes = camera.getParameters().getSupportedPreviewSizes();
+		} else {
+			onError(MediaModule.UNKNOWN_ERROR, "Unable to access the first back-facing camera.");
+			finish();
+		}
 		cameraActivity = this;
 		previewLayout.addView(preview, new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		cameraLayout.addView(localOverlayProxy.getOrCreateView().getNativeView(), new FrameLayout.LayoutParams(
@@ -399,6 +409,13 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		cameraActivity.finish();
 	}
 
+	public static Bitmap RotateBitmap(Bitmap source, float angle)
+	{
+			Matrix matrix = new Matrix();
+			matrix.postRotate(angle);
+			return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+	}
+
 	static PictureCallback jpegCallback = new PictureCallback()
 	{
 		public void onPictureTaken(byte[] data, Camera camera)
@@ -408,7 +425,25 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			}
 
 			if (successCallback != null) {
-				TiBlob imageData = TiBlob.blobFromData(data);
+				TiBlob imageData = null;
+				if (cameraActivity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+					// Portrait
+					int screenWidth    = optimalPreviewSize.width;
+					int screenHeight   = optimalPreviewSize.height;
+					Bitmap bm          = BitmapFactory.decodeByteArray(data, 0, (data != null) ? data.length : 0);
+					// ratio img between preview size
+					double aspectRatio = (double) bm.getHeight() / (double) bm.getWidth();
+					int targetHeight   = (int) (screenWidth * aspectRatio);
+					int h              = targetHeight;
+					int w              = screenWidth;
+					bm                 = Bitmap.createScaledBitmap(bm, w, h, false); // Resize image
+					bm                 = RotateBitmap(bm, 90); // Rotate image
+					imageData          = TiBlob.blobFromImage(bm);
+					bm.recycle();
+				} else { // Landscape
+					imageData = TiBlob.blobFromData(data);
+				}
+
 				KrollDict dict = MediaModule.createDictForImage(imageData, "image/jpeg");
 				successCallback.callAsync(callbackContext, dict);
 			}

@@ -42,6 +42,11 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 
 public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Callback
 {
@@ -113,7 +118,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			} else {
 				previewWidth = (int) (previewHeight * aspectRatio + .5);
 			}
-			
+
 			super.onMeasure(MeasureSpec.makeMeasureSpec(previewWidth,
 					MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(
 					previewHeight, MeasureSpec.EXACTLY));
@@ -126,12 +131,18 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		}
 	}
 
+
+	@Override
+	public void onBackPressed() {
+	// back button nothing
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		setFullscreen(true);
 		setNavBarHidden(true);
-		
+
 		super.onCreate(savedInstanceState);
 
 		// create camera preview
@@ -339,7 +350,7 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 
 	/**
 	 * Computes the optimal preview size given the target display size and aspect ratio.
-	 * 
+	 *
 	 * @param supportPreviewSizes
 	 *            a list of preview sizes the camera supports
 	 * @param targetSize
@@ -368,14 +379,14 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 				minAspectDiff = Math.abs(ratio - targetRatio);
 			}
 		}
-		
+
 		return optimalSize;
 	}
-	
+
 	/**
-	 * Computes the optimal picture size given the preview size. 
+	 * Computes the optimal picture size given the preview size.
 	 * This returns the maximum resolution size.
-	 * 
+	 *
 	 * @param sizes
 	 *            a list of picture sizes the camera supports
 	 * @return the optimal size of the picture
@@ -479,6 +490,13 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 		}
 	};
 
+	public static Bitmap RotateBitmap(Bitmap source, float angle)
+	{
+		Matrix matrix = new Matrix();
+		matrix.postRotate(angle);
+		return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+	}
+
 	static PictureCallback jpegCallback = new PictureCallback()
 	{
 		public void onPictureTaken(byte[] data, Camera camera)
@@ -488,7 +506,27 @@ public class TiCameraActivity extends TiBaseActivity implements SurfaceHolder.Ca
 			}
 
 			if (successCallback != null) {
-				TiBlob imageData = TiBlob.blobFromData(data);
+				TiBlob imageData = null;
+				if (cameraActivity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+					try {
+						// Portrait
+						int screenWidth    = optimalPreviewSize.width;
+						int screenHeight   = optimalPreviewSize.height;
+						Bitmap bm          = BitmapFactory.decodeByteArray(data, 0, (data != null) ? data.length : 0);
+						// ratio img between preview size
+						double aspectRatio = (double) bm.getHeight() / (double) bm.getWidth();
+						int targetHeight   = (int) (screenWidth * aspectRatio);
+						int h              = targetHeight;
+						int w              = screenWidth;
+						bm                 = Bitmap.createScaledBitmap(bm, w, h, false); // Resize image
+						bm                 = RotateBitmap(bm, 90); // Rotate image
+						imageData          = TiBlob.blobFromImage(bm);
+						bm.recycle();
+					} catch (Throwable e) {
+						Log.d(TAG, "Bitmap error resize", e);
+						imageData = TiBlob.blobFromData(data);
+					}
+				}
 				KrollDict dict = MediaModule.createDictForImage(imageData,
 						"image/jpeg");
 				successCallback.callAsync(callbackContext, dict);

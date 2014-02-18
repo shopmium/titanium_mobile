@@ -315,7 +315,10 @@ def remove_orphaned_files(source_folder, target_folder, ignore=[]):
 				os.remove(full)
 
 def is_resource_drawable(path):
-	if re.search("android/images/(high|medium|low|res-[^/]+)/", path.replace(os.sep, "/")):
+	normalized = path.replace(os.sep, "/")
+	if re.search("android/images/(high|medium|low|res-[^/]+)/", normalized):
+		return True
+	elif re.search("/assets/[^@]*@\d*.*$", normalized):
 		return True
 	else:
 		return False
@@ -326,13 +329,24 @@ def resource_drawable_folder(path):
 	else:
 		pattern = r'/android/images/(high|medium|low|res-[^/]+)/'
 		match = re.search(pattern, path.replace(os.sep, "/"))
-		if not match.groups():
-			return None
-		folder = match.groups()[0]
-		if re.match('high|medium|low', folder):
-			return 'drawable-%sdpi' % folder[0]
+		match_shopmium_assets = re.search(r'/assets/[^@]*@(\d*).*$', path.replace(os.sep, "/"))
+		if match and match.groups():
+			folder = match.groups()[0]
+			if re.match('high|medium|low', folder):
+				return 'drawable-%sdpi' % folder[0]
+			else:
+				return 'drawable-%s' % folder.replace('res-', '')
+		elif match_shopmium_assets and match_shopmium_assets.groups():
+			res = match_shopmium_assets.groups()[0]
+			if res == '100' :
+				folder = 'drawable-mdpi'
+			elif res == '150' :
+				folder = 'drawable-hdpi'
+			elif res == '200' :
+				folder = 'drawable-xhdpi'
+			return folder
 		else:
-			return 'drawable-%s' % folder.replace('res-', '')
+			return None
 
 def remove_duplicate_nodes_in_res_file(full_path, node_names_to_check):
 	f = open(full_path, 'r')
@@ -770,25 +784,31 @@ class Builder(object):
 		def make_resource_drawable_filename(orig):
 			normalized = orig.replace(os.sep, "/")
 			matches = re.search("/android/images/(high|medium|low|res-[^/]+)/(?P<chopped>.*$)", normalized)
-			if matches and matches.groupdict() and 'chopped' in matches.groupdict():
+			matche_shopmium_assets = re.search("/assets/(?P<chopped>[^@]*)@(?P<res>\d*)(?P<ext>.*$)", normalized)
+			if matche_shopmium_assets and matche_shopmium_assets.groupdict() and 'chopped' in matche_shopmium_assets.groupdict():
+				chopped = matche_shopmium_assets.groupdict()['chopped'].lower() + matche_shopmium_assets.groupdict()['ext']	
+			elif matches and matches.groupdict() and 'chopped' in matches.groupdict():
 				chopped = matches.groupdict()['chopped'].lower()
-				for_hash = chopped
-				if for_hash.endswith('.9.png'):
-					for_hash = for_hash[:-6] + '.png'
-				extension = ""
-				without_extension = chopped
-				if re.search("\\..*$", chopped):
-					if chopped.endswith('.9.png'):
-						extension = '9.png'
-						without_extension = chopped[:-6]
-					else:
-						extension = chopped.split(".")[-1]
-						without_extension = chopped[:-(len(extension)+1)]
-				cleaned_without_extension = re.sub(r'[^a-z0-9_]', '_', without_extension)
-				cleaned_extension = re.sub(r'[^a-z0-9\._]', '_', extension)
-				result = cleaned_without_extension[:80] + "_" + hashlib.md5(for_hash).hexdigest()[:10]
-				if extension:
-					result += "." + extension
+			else:
+				return None
+			
+			for_hash = chopped
+			if for_hash.endswith('.9.png'):
+				for_hash = for_hash[:-6] + '.png'
+			extension = ""
+			without_extension = chopped
+			if re.search("\\..*$", chopped):
+				if chopped.endswith('.9.png'):
+					extension = '9.png'
+					without_extension = chopped[:-6]
+				else:
+					extension = chopped.split(".")[-1]
+					without_extension = chopped[:-(len(extension)+1)]
+			cleaned_without_extension = re.sub(r'[^a-z0-9_]', '_', without_extension)
+			cleaned_extension = re.sub(r'[^a-z0-9\._]', '_', extension)
+			result = cleaned_without_extension[:80] + "_" + hashlib.md5(for_hash).hexdigest()[:10]
+			if extension:
+				result += "." + extension
 				return result
 			else:
 				trace("Regexp for resource drawable file %s failed" % orig)

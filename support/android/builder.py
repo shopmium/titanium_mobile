@@ -318,7 +318,7 @@ def is_resource_drawable(path):
 	normalized = path.replace(os.sep, "/")
 	if re.search("android/images/(high|medium|low|res-[^/]+)/", normalized):
 		return True
-	elif re.search("/assets/[^@]*@\d*.*$", normalized):
+	elif re.search("/assets/[^@]*@?\d*.*$", normalized):
 		return True
 	else:
 		return False
@@ -329,7 +329,7 @@ def resource_drawable_folder(path):
 	else:
 		pattern = r'/android/images/(high|medium|low|res-[^/]+)/'
 		match = re.search(pattern, path.replace(os.sep, "/"))
-		match_shopmium_assets = re.search(r'/assets/[^@]*@(\d*).*$', path.replace(os.sep, "/"))
+		match_shopmium_assets = re.search(r'/assets/[^@]*@?(\d*).*$', path.replace(os.sep, "/"))
 		if match and match.groups():
 			folder = match.groups()[0]
 			if re.match('high|medium|low', folder):
@@ -344,6 +344,8 @@ def resource_drawable_folder(path):
 				folder = 'drawable-hdpi'
 			elif res == '200' :
 				folder = 'drawable-xhdpi'
+			elif res == '' :
+				folder = 'drawable'
 			return folder
 		else:
 			return None
@@ -784,7 +786,7 @@ class Builder(object):
 		def make_resource_drawable_filename(orig):
 			normalized = orig.replace(os.sep, "/")
 			matches = re.search("/android/images/(high|medium|low|res-[^/]+)/(?P<chopped>.*$)", normalized)
-			matche_shopmium_assets = re.search("/assets/(?P<chopped>[^@]*)@(?P<res>\d*)(?P<ext>.*$)", normalized)
+			matche_shopmium_assets = re.search("/assets/(?P<chopped>[^@]*)@?(?P<res>\d*)(?P<ext>.*$)", normalized)
 			if matche_shopmium_assets and matche_shopmium_assets.groupdict() and 'chopped' in matche_shopmium_assets.groupdict():
 				chopped = matche_shopmium_assets.groupdict()['chopped'].lower() + matche_shopmium_assets.groupdict()['ext']	
 			elif matches and matches.groupdict() and 'chopped' in matches.groupdict():

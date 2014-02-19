@@ -761,6 +761,16 @@ NSArray* moviePlayerKeys = nil;
 	[movie stop];
 }
 
+-(void)gotoFullScreenManually:(id)args {
+    ENSURE_UI_THREAD(gotoFullScreenManually, args);
+	[movie setFullscreen:YES animated:YES];
+}
+
+-(void)exitFullScreenManually:(id)args {
+    ENSURE_UI_THREAD(exitFullScreenManually, args);
+	[movie setFullscreen:NO animated:YES];
+}
+
 -(void)play:(id)args
 {
     ENSURE_UI_THREAD(play, args);

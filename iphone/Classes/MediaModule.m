@@ -1027,7 +1027,13 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
                                   -[window bounds].size.height * [[window layer] anchorPoint].y);
 
             // Render the layer hierarchy to the current context
-            [[window layer] renderInContext:context];
+
+            if ([window respondsToSelector:@selector(drawViewHierarchyInRect:afterScreenUpdates:)]) {
+		            [window drawViewHierarchyInRect:window.bounds afterScreenUpdates:YES];
+		        } else {
+		            //[window.layer renderInContext:context];
+		            [[window layer] renderInContext:context];
+		        }
 
             // Restore the context
             CGContextRestoreGState(context);
@@ -1053,7 +1059,7 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 		default:
 			break;
 	}
-	
+
 	TiBlob *blob = [[[TiBlob alloc] initWithImage:image] autorelease];
 	NSDictionary *event = [NSDictionary dictionaryWithObject:blob forKey:@"media"];
 	[self _fireEventToListener:@"screenshot" withObject:event listener:arg thisObject:nil];

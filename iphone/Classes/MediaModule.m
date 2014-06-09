@@ -1456,6 +1456,23 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
                 }
             }
             
+            //Hack : Force to take photo in portrait
+            //The camera is landscape native (https://devforums.apple.com/message/301160#301160)
+            UIInterfaceOrientation imgOrientation = resultImage.imageOrientation;
+            switch (imgOrientation) {
+                case UIImageOrientationUp:
+                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+					break;
+				case UIImageOrientationDown:
+					resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+					break;
+				case UIImageOrientationLeft:
+					resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+					break;
+				default:
+					break;
+			}
+
             if (resultImage == nil) {
                 resultImage = (editedImage != nil) ? editedImage : originalImage;
             }

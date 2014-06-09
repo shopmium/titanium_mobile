@@ -1488,7 +1488,7 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
             UIInterfaceOrientation imgOrientation = resultImage.imageOrientation;
             switch (imgOrientation) {
                 case UIImageOrientationUp:
-                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight]
+                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
                     break;
                 case UIImageOrientationDown:
                     resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];

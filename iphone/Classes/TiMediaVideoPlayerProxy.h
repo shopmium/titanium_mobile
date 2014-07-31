@@ -55,6 +55,8 @@
 -(void)restart;
 -(void)stop:(id)args;
 -(void)play:(id)args;
+-(void)gotoFullScreenManually:(id)args;
+-(void)exitFullScreenManually:(id)args;
 @end
 
 #endif

@@ -758,6 +758,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
     if([self forceSplashAsSnapshot]) {
         [window addSubview:[self splashScreenImage]];
     }
+   [launchOptions removeObjectForKey:@"url"];
 	[[NSNotificationCenter defaultCenter] postNotificationName:kTiSuspendNotification object:self];
 	
 	// suspend any image loading

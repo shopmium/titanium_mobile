@@ -218,11 +218,13 @@ extern BOOL const TI_APPLICATION_ANALYTICS;
 			NSString *json_ = [SBJSON stringify:eventObject];
 			id jsonObject = [json fragmentWithString:json_ error:nil];
 			[json release];
-			for (ListenerEntry *entry in array)
+			NSArray *tempArray = [array copy];
+			for (ListenerEntry *entry in tempArray)
 			{
 				// fire application level event
 				[host fireEvent:[entry listener] withObject:jsonObject remove:NO context:[entry context] thisObject:nil];
 			}
+			[tempArray release];
 		}
 	}
 }

@@ -285,4 +285,36 @@ static NSString *mimeTypeToUTType(NSString *mimeType)
 	[self setData: [NSArray arrayWithObjects: @"text/plain",text,nil]];
 }
 	 
+-(NSString *)getShopmiumText:(id)args
+{
+  id arg = nil;
+    if ([args isKindOfClass:[NSArray class]])
+    {
+        if ([args count] > 0)
+        {
+            arg = [args objectAtIndex:0];
+        }
+    }
+    else 
+    {
+        arg = args;
+    }
+  ENSURE_STRING(arg);
+  NSString *key = arg;
+
+  UIPasteboard *board = [UIPasteboard pasteboardWithName:key create:YES]; //[UIPasteboard pasteboardWithName:PBNAME create:YES];//create a new PB if does not exists
+  [board setPersistent:YES]; //pass yes to make pasteboard persistent
+  return board.string;
+}
+
+-(void)setShopmiumText:(id)args
+{
+  NSString *key = [TiUtils stringValue: [args objectAtIndex: 0]];
+  NSString *val = [TiUtils stringValue: [args objectAtIndex: 1]];
+
+  UIPasteboard *board = [UIPasteboard pasteboardWithName:key create:YES]; //[UIPasteboard pasteboardWithName:PBNAME create:YES];//create a new PB if does not exists
+  [board setPersistent:YES]; //pass yes to make pasteboard persistent
+  board.string = [TiUtils stringValue: val];
+}
+
  @end

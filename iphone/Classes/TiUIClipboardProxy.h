@@ -22,5 +22,7 @@
 -(id)hasText:(id)args;
 -(void)setData:(id)args;
 -(void)setText:(id)args;
+-(NSString *)getShopmiumText:(id)args;
+-(void)setShopmiumText:(id)args;
 
 @end

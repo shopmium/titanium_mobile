@@ -274,6 +274,10 @@ public abstract class TiBaseActivity extends ActionBarActivity
 	{
 		for (int i = 0; i < dialogs.size(); i++) {
 			DialogWrapper p = dialogs.get(i);
+			if (p == null||p.getDialog() == null ) {
+					Log.d(TAG, "Dialog object not found, skipping");
+					continue;
+			}	
 			if (p.getDialog().equals(d)) {
 				p.release();
 				dialogs.remove(i);
@@ -1392,4 +1396,3 @@ public abstract class TiBaseActivity extends ActionBarActivity
 		return false;
 	}
 }
-

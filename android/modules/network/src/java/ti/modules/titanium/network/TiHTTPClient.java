@@ -1360,9 +1360,12 @@ public class TiHTTPClient
 
 	private void handleURLEncodedData(UrlEncodedFormEntity form)
 	{
+		final long dataLength;
+		long length = -1;
 		AbstractHttpEntity entity = null;
 		if (data instanceof String) {
 			try {
+				length = ((String) data).length();
 				entity = new StringEntity((String) data, "UTF-8");
 
 			} catch(Exception ex) {
@@ -1370,11 +1373,20 @@ public class TiHTTPClient
 				Log.e(TAG, "Exception, implement recovery: ", ex);
 			}
 		} else if (data instanceof AbstractHttpEntity) {
+			length = ((AbstractHttpEntity) data).getContentLength();
 			entity = (AbstractHttpEntity) data;
 		} else {
+			length = form.getContentLength();
 			entity = form;
 		}
 		
+		if (length == 0) {
+			dataLength = -1;
+		} else {
+			dataLength = length;
+		}
+
+
 		if (entity != null) {
 			Header header = request.getFirstHeader("Content-Type");
 			if(header == null) {
@@ -1384,7 +1396,15 @@ public class TiHTTPClient
 				entity.setContentType(header.getValue());
 			}
 			HttpEntityEnclosingRequest e = (HttpEntityEnclosingRequest)request;
-			e.setEntity(entity);
+
+			ProgressEntity progressEntity = new ProgressEntity(entity, new ProgressListener() {
+							public void progress(int progress) {
+								KrollDict data = new KrollDict();
+								data.put("progress", ((double)progress)/dataLength);
+								dispatchCallback("onsendstream", data);
+							}
+						});
+			e.setEntity(progressEntity);
 		}
 	}
 

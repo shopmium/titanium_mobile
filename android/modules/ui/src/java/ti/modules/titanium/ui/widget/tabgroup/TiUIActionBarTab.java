@@ -25,7 +25,10 @@ public class TiUIActionBarTab extends TiUIAbstractTab {
 	public static class TabFragment extends Fragment {
 		private TiUIActionBarTab tab;
 
-		public TabFragment(TiUIActionBarTab tab) {
+		public TabFragment() {
+		}
+
+		public void setTab(TiUIActionBarTab tab) {
 			this.tab = tab;
 		}
 
@@ -65,7 +68,11 @@ public class TiUIActionBarTab extends TiUIAbstractTab {
 			Drawable icon = TiUIHelper.getResourceDrawable(url);
 			tab.setIcon(icon);
 		}
-		
+
+	}
+
+	public String getTabTag() {
+		return ((TabProxy)proxy).getTabTag();
 	}
 
 	@Override
@@ -88,7 +95,8 @@ public class TiUIActionBarTab extends TiUIAbstractTab {
 	 * will display the tab's content view.
 	 */
 	void initializeFragment() {
-		fragment = new TabFragment(this);
+		fragment = new TabFragment();
+		fragment.setTab(this);
 	}
 
 }

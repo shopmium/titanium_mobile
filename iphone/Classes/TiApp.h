@@ -50,6 +50,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
 	TiRootViewController *controller;
 	NSString *userAgent;
 	NSString *remoteDeviceUUID;
+    NSData *remoteDeviceDataUUID;
 	
 	id remoteNotificationDelegate;
 	NSDictionary* remoteNotification;
@@ -141,6 +142,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
  @return Current device UUID.
  */
 -(NSString*)remoteDeviceUUID;
+-(NSData*)remoteDeviceDataUUID;
 
 /**
  Tells application to show network activity indicator.

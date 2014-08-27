@@ -23,6 +23,7 @@
 #ifdef KROLL_COVERAGE
 # import "KrollCoverage.h"
 #endif
+#import <Parse/Parse.h>
 
 TiApp* sharedApp;
 
@@ -384,6 +385,10 @@ TI_INLINE void waitForMemoryPanicCleared();   //WARNING: This must never be run 
 	}
     [self launchToUrl];
 	[self boot];
+    
+    [application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge|
+     UIRemoteNotificationTypeAlert|
+     UIRemoteNotificationTypeSound];
 	
 	return YES;
 }
@@ -819,6 +824,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	{
 		[remoteNotificationDelegate performSelector:@selector(application:didReceiveRemoteNotification:) withObject:application withObject:remoteNotification];
 	}
+	[PFPush handlePush:userInfo];
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
@@ -829,6 +835,10 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	
 	RELEASE_TO_NIL(remoteDeviceUUID);
 	remoteDeviceUUID = [token copy];
+    
+    RELEASE_TO_NIL(remoteDeviceDataUUID);
+	remoteDeviceDataUUID = [deviceToken copy];
+    
 	
 	NSString *curKey = [[NSUserDefaults standardUserDefaults] stringForKey:@"APNSRemoteDeviceUUID"];
 	if (curKey==nil || ![curKey isEqualToString:remoteDeviceUUID])
@@ -918,7 +928,8 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	RELEASE_TO_NIL(launchOptions);
 	RELEASE_TO_NIL(controller);
 	RELEASE_TO_NIL(userAgent);
-	RELEASE_TO_NIL(remoteDeviceUUID);
+    RELEASE_TO_NIL(remoteDeviceUUID);
+	RELEASE_TO_NIL(remoteDeviceDataUUID);
 	RELEASE_TO_NIL(remoteNotification);
 	RELEASE_TO_NIL(splashScreenImage);
     if ([self debugMode]) {
@@ -945,6 +956,11 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 -(NSString*)remoteDeviceUUID
 {
 	return remoteDeviceUUID;
+}
+
+-(NSData*)remoteDeviceDataUUID
+{
+	return remoteDeviceDataUUID;
 }
 
 -(NSString*)sessionId

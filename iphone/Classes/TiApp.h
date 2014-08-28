@@ -50,8 +50,8 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
 	TiRootViewController *controller;
 	NSString *userAgent;
 	NSString *remoteDeviceUUID;
-    NSData *remoteDeviceDataUUID;
-	
+	NSData *remoteDeviceDataUUID;
+
 	id remoteNotificationDelegate;
 	NSDictionary* remoteNotification;
 	NSMutableDictionary* pendingCompletionHandlers;

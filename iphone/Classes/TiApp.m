@@ -23,7 +23,6 @@
 #ifdef KROLL_COVERAGE
 # import "KrollCoverage.h"
 #endif
-#import <Parse/Parse.h>
 
 TiApp* sharedApp;
 
@@ -824,7 +823,6 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	{
 		[remoteNotificationDelegate performSelector:@selector(application:didReceiveRemoteNotification:) withObject:application withObject:remoteNotification];
 	}
-	[PFPush handlePush:userInfo];
 }
 
 - (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken

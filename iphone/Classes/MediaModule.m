@@ -63,7 +63,6 @@ typedef void (^PermissionBlock)(BOOL granted)
 @private
     BOOL autoRotate;
 }
-- (BOOL)shouldAutorotate;
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation;
 - (NSUInteger)supportedInterfaceOrientations;
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation;
@@ -94,10 +93,6 @@ typedef void (^PermissionBlock)(BOOL granted)
 }
 
 - (NSUInteger)supportedInterfaceOrientations {
-  return UIInterfaceOrientationMaskPortrait;
-}
-
-- (BOOL)shouldAutorotate {
   return UIInterfaceOrientationMaskPortrait;
 }
 

@@ -182,44 +182,80 @@ public class TiResponseCache extends ResponseCache
 		}
 	}
 
+	/**
+	 * Check whether the content from uri has been cached. This method is optimized for
+	 * TiResponseCache. For other kinds of ResponseCache, eg. HttpResponseCache, it only
+	 * checks whether the system's default response cache is set.
+	 * @param uri
+	 * @return true if the content from uri is cached; false otherwise.
+	 */
 	public static boolean peek(URI uri)
 	{
-		TiResponseCache rc = (TiResponseCache) TiResponseCache.getDefault();
-		if (rc == null) return false;
-		if (rc.cacheDir == null) return false;
-		
-		String hash = DigestUtils.shaHex(uri.toString());
-		File hFile = new File(rc.cacheDir, hash + HEADER_SUFFIX);
-		File bFile = new File(rc.cacheDir, hash + BODY_SUFFIX);
-		if (!bFile.exists() || !hFile.exists()) return false;
-		return true;
+		ResponseCache rcc = TiResponseCache.getDefault();
+
+		if (rcc instanceof TiResponseCache) {
+			// The default response cache is set by Titanium
+			TiResponseCache rc = (TiResponseCache) rcc;
+			if (rc.cacheDir == null) {
+				return false;
+			}
+			String hash = DigestUtils.shaHex(uri.toString());
+			File hFile = new File(rc.cacheDir, hash + HEADER_SUFFIX);
+			File bFile = new File(rc.cacheDir, hash + BODY_SUFFIX);
+			if (!bFile.exists() || !hFile.exists()) {
+				return false;
+			}
+			return true;
+
+		} else if (rcc != null) {
+			// The default response cache is set by other modules/sdks
+			return true;
+		}
+
+		return false;
 	}
 
+	/**
+	 * Get the cached content for uri. It works for all kinds of ResponseCache.
+	 * @param uri
+	 * @return an InputStream of the cached content
+	 */
 	public static InputStream openCachedStream(URI uri)
 	{
-		TiResponseCache rc = (TiResponseCache) TiResponseCache.getDefault();
-		if (rc == null) {
-			return null;
+		ResponseCache rcc = TiResponseCache.getDefault();
+
+		if (rcc instanceof TiResponseCache) {
+			// The default response cache is set by Titanium
+			TiResponseCache rc = (TiResponseCache) rcc;
+			if (rc.cacheDir == null) {
+				return null;
+			}
+			String hash = DigestUtils.shaHex(uri.toString());
+			File hFile = new File(rc.cacheDir, hash + HEADER_SUFFIX);
+			File bFile = new File(rc.cacheDir, hash + BODY_SUFFIX);
+			if (!bFile.exists() || !hFile.exists()) {
+				return null;
+			}
+			try {
+				return new FileInputStream(bFile);
+			} catch (FileNotFoundException e) {
+				// Fallback to URL download.
+				return null;
+			}
+
+		} else if (rcc != null) {
+			// The default response cache is set by other modules/sdks
+			try {
+				URLConnection urlc = uri.toURL().openConnection();
+				urlc.setRequestProperty("Cache-Control", "only-if-cached");
+				return urlc.getInputStream();
+			} catch (Exception e) {
+				// Not cached. Fallback to URL download.
+				return null;
+			}
 		}
 
-		if (rc.cacheDir == null) {
-			return null;
-		}
-		
-		String hash = DigestUtils.shaHex(uri.toString());
-		File hFile = new File(rc.cacheDir, hash + HEADER_SUFFIX);
-		File bFile = new File(rc.cacheDir, hash + BODY_SUFFIX);
-
-		if (!bFile.exists() || !hFile.exists()) {
-			return null;
-		}
-
-		try {
-			return new FileInputStream(bFile);
-		} catch (FileNotFoundException e) {
-			// Fallback to URL download?
-			return null;
-		}
+		return null;
 	}
 
 	public static void addCompleteListener(URI uri, CompleteListener listener)
@@ -270,10 +306,15 @@ public class TiResponseCache extends ResponseCache
 		BufferedReader rdr = new BufferedReader(new FileReader(hFile), 1024);
 		for (String line=rdr.readLine() ; line != null ; line=rdr.readLine()) {
 			String keyval[] = line.split("=", 2);
+			if (keyval.length < 2) {
+				continue;
+			}
 			if (!headers.containsKey(keyval[0])) {
 				headers.put(keyval[0], new ArrayList<String>());
 			}
+			
 			headers.get(keyval[0]).add(keyval[1]);
+			
 		}
 		rdr.close();
 		
@@ -331,7 +372,7 @@ public class TiResponseCache extends ResponseCache
 		// getHeaderFields() just checks the response itself
 		Map<String, List<String>> headers = makeLowerCaseHeaders(conn.getHeaderFields());
 		String cacheControl = getHeader(headers, "cache-control");
-		if (cacheControl != null && cacheControl.matches("^.*(no-cache|no-store|must-revalidate).*")) {
+		if (cacheControl != null && cacheControl.matches("^.*(no-cache|no-store|must-revalidate|max-age=0).*")) {
 			return null; // See RFC-2616
 		}
 

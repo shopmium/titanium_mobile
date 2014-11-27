@@ -726,7 +726,6 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 		}
 		dialog.show();
 		if (settings.containsKey("okButtonTitle")) {
-			dialog.getButton(TimePickerDialog.BUTTON_POSITIVE).setText(TiConvert.toString(settings, "okButtonTitle"));
 			final HashMap settingsThread = settings;
 			getActivity().runOnUiThread(new Runnable() {
 					public void run() {

@@ -583,7 +583,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 		 * should show up on top of the current activity when called - not just the
 		 * activity it was created in
 		 */
-		DatePickerDialog dialog = new DatePickerDialog(
+		final DatePickerDialog dialog = new DatePickerDialog(
 					TiApplication.getAppCurrentActivity(),
 					dateSetListener,
 					calendar.get(Calendar.YEAR),
@@ -711,7 +711,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 				}
 			};
 		}
-		TimePickerDialog dialog = new TimePickerDialog(
+		final TimePickerDialog dialog = new TimePickerDialog(
 					getActivity(),
 					timeSetListener,
 					calendar.get(Calendar.HOUR_OF_DAY),

@@ -583,7 +583,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 		 * should show up on top of the current activity when called - not just the
 		 * activity it was created in
 		 */
-		final DatePickerDialog dialog = new DatePickerDialog(
+		DatePickerDialog dialog = new DatePickerDialog(
 					TiApplication.getAppCurrentActivity(),
 					dateSetListener,
 					calendar.get(Calendar.YEAR),
@@ -618,12 +618,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 		}
 		dialog.show();
 		if (settings.containsKey("okButtonTitle")) {
-			final HashMap settingsThread = settings;
-			TiApplication.getAppCurrentActivity().runOnUiThread(new Runnable() {
-					public void run() {
-						dialog.getButton(DatePickerDialog.BUTTON_POSITIVE).setText(TiConvert.toString(settingsThread, "okButtonTitle"));
-					}
-			});
+			dialog.getButton(DatePickerDialog.BUTTON_POSITIVE).setText(TiConvert.toString(settings, "okButtonTitle"));
 		}
 	}
 	
@@ -711,7 +706,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 				}
 			};
 		}
-		final TimePickerDialog dialog = new TimePickerDialog(
+		TimePickerDialog dialog = new TimePickerDialog(
 					getActivity(),
 					timeSetListener,
 					calendar.get(Calendar.HOUR_OF_DAY),
@@ -726,12 +721,7 @@ public class PickerProxy extends TiViewProxy implements PickerColumnListener
 		}
 		dialog.show();
 		if (settings.containsKey("okButtonTitle")) {
-			final HashMap settingsThread = settings;
-			getActivity().runOnUiThread(new Runnable() {
-					public void run() {
-						dialog.getButton(DatePickerDialog.BUTTON_POSITIVE).setText(TiConvert.toString(settingsThread, "okButtonTitle"));
-					}
-			});
+			dialog.getButton(TimePickerDialog.BUTTON_POSITIVE).setText(TiConvert.toString(settings, "okButtonTitle"));
 		}
 	}
 	

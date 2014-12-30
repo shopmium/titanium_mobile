@@ -22,6 +22,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVAudioPlayer.h>
 #import <AVFoundation/AVAudioSession.h>
+#import <AVFoundation/AVCaptureDevice.h>
+#import <AVFoundation/AVMediaFormat.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <MobileCoreServices/UTCoreTypes.h>
 #import <QuartzCore/QuartzCore.h>
@@ -1009,6 +1011,49 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 -(BOOL)isCameraSupported;
 {
 	return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
+}
+
+-(void)handleCameraAuthorization:(BOOL)isAllowed withCallback:(KrollCallback *)callback {
+		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
+			eventObject:[TiUtils dictionaryWithCode:(isAllowed ? 0 : 1) message:nil]
+			thisObject:self];
+		[[callback context] enqueue:invocationEvent];
+}
+
+-(void)requestCameraAuthorization:(id)args
+{
+	ENSURE_SINGLE_ARG(args, KrollCallback);
+	KrollCallback * callback = args;
+
+	TiThreadPerformOnMainThread(^(){
+			__block BOOL isAuthorize = NO;
+			AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+			if (authStatus == AVAuthorizationStatusAuthorized) {
+				isAuthorize = YES;
+				[self handleCameraAuthorization:isAuthorize withCallback:callback];
+			}
+			else if (authStatus == AVAuthorizationStatusDenied) {
+				isAuthorize = NO;
+				[self handleCameraAuthorization:isAuthorize withCallback:callback];
+			} else if (authStatus == AVAuthorizationStatusRestricted) {
+				isAuthorize = NO;
+				[self handleCameraAuthorization:isAuthorize withCallback:callback];
+			} else if (authStatus == AVAuthorizationStatusNotDetermined) {
+				[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
+					completionHandler:^(BOOL granted) {
+						if (granted) {
+							isAuthorize = YES;
+							[self handleCameraAuthorization:isAuthorize withCallback:callback];
+						} else {
+							isAuthorize = NO;
+							[self handleCameraAuthorization:isAuthorize withCallback:callback];
+						}
+				}];
+			} else {
+				isAuthorize = NO;
+				[self handleCameraAuthorization:isAuthorize withCallback:callback];
+			}
+	}, NO);
 }
 
 -(void)showCamera:(id)args

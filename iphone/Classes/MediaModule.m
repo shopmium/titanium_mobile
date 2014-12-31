@@ -1013,9 +1013,9 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 	return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
 }
 
--(void)handleCameraAuthorization:(BOOL)isAllowed withCallback:(KrollCallback *)callback {
+-(void)handleCameraAuthorization:(BOOL)isAuthorized withCallback:(KrollCallback *)callback {
 		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
-			eventObject:[TiUtils dictionaryWithCode:(isAllowed ? 0 : 1) message:nil]
+			eventObject:[TiUtils dictionaryWithCode:(isAuthorized ? 0 : 1) message:nil]
 			thisObject:self];
 		[[callback context] enqueue:invocationEvent];
 }
@@ -1026,33 +1026,31 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 	KrollCallback * callback = args;
 
 	TiThreadPerformOnMainThread(^(){
-			__block BOOL isAuthorize = NO;
-			AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-			if (authStatus == AVAuthorizationStatusAuthorized) {
-				isAuthorize = YES;
-				[self handleCameraAuthorization:isAuthorize withCallback:callback];
-			}
-			else if (authStatus == AVAuthorizationStatusDenied) {
-				isAuthorize = NO;
-				[self handleCameraAuthorization:isAuthorize withCallback:callback];
-			} else if (authStatus == AVAuthorizationStatusRestricted) {
-				isAuthorize = NO;
-				[self handleCameraAuthorization:isAuthorize withCallback:callback];
-			} else if (authStatus == AVAuthorizationStatusNotDetermined) {
+		AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+		__block BOOL isAuthorized;
+		switch(authStatus) {
+			case AVAuthorizationStatusAuthorized:
+				isAuthorized = YES;
+				break;
+			case AVAuthorizationStatusDenied:
+			case AVAuthorizationStatusRestricted:
+				isAuthorized = NO;
+				break;
+			case AVAuthorizationStatusNotDetermined:
 				[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
 					completionHandler:^(BOOL granted) {
 						if (granted) {
-							isAuthorize = YES;
-							[self handleCameraAuthorization:isAuthorize withCallback:callback];
+							isAuthorized = YES;
 						} else {
-							isAuthorize = NO;
-							[self handleCameraAuthorization:isAuthorize withCallback:callback];
+							isAuthorized = NO;
 						}
 				}];
-			} else {
-				isAuthorize = NO;
-				[self handleCameraAuthorization:isAuthorize withCallback:callback];
-			}
+				break;
+			default:
+				isAuthorized = NO;
+				break;
+		}
+		[self handleCameraAuthorization:isAuthorized withCallback:callback];
 	}, NO);
 }
 

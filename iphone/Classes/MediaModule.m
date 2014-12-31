@@ -1013,13 +1013,6 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 	return [UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera];
 }
 
--(void)handleCameraAuthorization:(BOOL)isAuthorized withCallback:(KrollCallback *)callback {
-		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
-			eventObject:[TiUtils dictionaryWithCode:(isAuthorized ? 0 : 1) message:nil]
-			thisObject:self];
-		[[callback context] enqueue:invocationEvent];
-}
-
 -(void)requestCameraAuthorization:(id)args
 {
 	ENSURE_SINGLE_ARG(args, KrollCallback);
@@ -1028,6 +1021,7 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 	TiThreadPerformOnMainThread(^(){
 		AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
 		__block BOOL isAuthorized;
+
 		switch(authStatus) {
 			case AVAuthorizationStatusAuthorized:
 				isAuthorized = YES;
@@ -1050,7 +1044,13 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 				isAuthorized = NO;
 				break;
 		}
-		[self handleCameraAuthorization:isAuthorized withCallback:callback];
+
+		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
+			eventObject:[TiUtils dictionaryWithCode:(isAuthorized ? 0 : 1) message:nil]
+			thisObject:self];
+		[[callback context] enqueue:invocationEvent];
+		RELEASE_TO_NIL(invocationEvent);
+
 	}, NO);
 }
 

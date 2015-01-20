@@ -1019,38 +1019,13 @@ MAKE_SYSTEM_PROP(VIDEO_FINISH_REASON_USER_EXITED,MPMovieFinishReasonUserExited);
 	KrollCallback * callback = args;
 
 	TiThreadPerformOnMainThread(^(){
-		AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-		__block BOOL isAuthorized;
-
-		switch(authStatus) {
-			case AVAuthorizationStatusAuthorized:
-				isAuthorized = YES;
-				break;
-			case AVAuthorizationStatusDenied:
-			case AVAuthorizationStatusRestricted:
-				isAuthorized = NO;
-				break;
-			case AVAuthorizationStatusNotDetermined:
-				[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo
-					completionHandler:^(BOOL granted) {
-						if (granted) {
-							isAuthorized = YES;
-						} else {
-							isAuthorized = NO;
-						}
-				}];
-				break;
-			default:
-				isAuthorized = NO;
-				break;
-		}
-
-		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
-			eventObject:[TiUtils dictionaryWithCode:(isAuthorized ? 0 : 1) message:nil]
-			thisObject:self];
-		[[callback context] enqueue:invocationEvent];
-		RELEASE_TO_NIL(invocationEvent);
-
+		[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+			KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback
+				eventObject:[TiUtils dictionaryWithCode:(granted ? 0 : 1) message:nil]
+				thisObject:self];
+			[[callback context] enqueue:invocationEvent];
+			RELEASE_TO_NIL(invocationEvent);
+		}];
 	}, NO);
 }
 

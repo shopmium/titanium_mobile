@@ -383,16 +383,6 @@ TI_INLINE void waitForMemoryPanicCleared();   //WARNING: This must never be run 
 	}
     [self launchToUrl];
 	[self boot];
-	
-
-	if ([TiUtils isIOS8OrGreater]) {
-		UIUserNotificationType userNotificationTypes = (UIUserNotificationTypeAlert | UIUserNotificationTypeBadge | UIUserNotificationTypeSound);
-		UIUserNotificationSettings *settings         = [UIUserNotificationSettings settingsForTypes:userNotificationTypes categories:nil];
-		[application registerUserNotificationSettings:settings];
-		[application registerForRemoteNotifications];
-	} else {
-		[application registerForRemoteNotificationTypes:UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeSound];
-	}
 
 	return YES;
 }

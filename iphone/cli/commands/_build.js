@@ -2356,7 +2356,9 @@ iOSBuilder.prototype.createXcodeProject = function createXcodeProject() {
 		+ '        done\\n'
 		+ "        echo 'Xcode Post-Compile Phase: Image optimization complete, continuing'\\n"
 		+ '    fi\\n'
-		+ 'fi'
+		+ 'fi\\n'
+		+ "echo 'Xcode Post-Compile Phase: Crashlytics Run Script Phase '\\n"
+		+ '/Library/Frameworks/Crashlytics.framework/run ' + process.env.CRASHLYTICSAPIKEY + ' ' +  process.env.CRASHLYTICSKEY
 	);
 
 	fs.writeFileSync(path.join(this.buildDir, this.tiapp.name + '.xcodeproj', 'project.pbxproj'), proj);

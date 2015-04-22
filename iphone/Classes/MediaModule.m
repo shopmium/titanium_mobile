@@ -704,8 +704,12 @@ MAKE_SYSTEM_PROP(VIDEO_TIME_OPTION_EXACT,MPMovieTimeOptionExact);
                                   -[window bounds].size.height * [[window layer] anchorPoint].y);
             
             // Render the layer hierarchy to the current context
-            [[window layer] renderInContext:context];
-            
+            if ([window respondsToSelector:@selector(drawViewHierarchyInRect:afterScreenUpdates:)]) {
+                [window drawViewHierarchyInRect:window.bounds afterScreenUpdates:YES];
+            } else {
+                [[window layer] renderInContext:context];
+            }
+
             // Restore the context
             CGContextRestoreGState(context);
         }

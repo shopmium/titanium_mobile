@@ -66,6 +66,9 @@ typedef void (^PermissionBlock)(BOOL granted)
 @private
     BOOL autoRotate;
 }
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation;
+- (NSUInteger)supportedInterfaceOrientations;
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation;
 @end
 
 @implementation TiImagePickerController
@@ -90,6 +93,19 @@ typedef void (^PermissionBlock)(BOOL granted)
 - (BOOL)shouldAutorotate
 {
     return autoRotate;
+}
+
+- (NSUInteger)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait;
+}
+
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    return UIInterfaceOrientationPortrait;
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
 -(BOOL)prefersStatusBarHidden
@@ -1365,7 +1381,7 @@ MAKE_SYSTEM_PROP(VIDEO_TIME_OPTION_EXACT,MPMovieTimeOptionExact);
 	}
     
     if ([TiUtils isIOS7OrGreater] && isCamera) {
-        BOOL customPicker = NO;
+        BOOL customPicker = YES;
         if ([TiUtils isIPad]) {
             customPicker = ![TiUtils boolValue:@"inPopOver" properties:args def:NO];
         } else {
@@ -1777,6 +1793,23 @@ MAKE_SYSTEM_PROP(VIDEO_TIME_OPTION_EXACT,MPMovieTimeOptionExact);
                     
                     UIGraphicsEndImageContext();
                 }
+            }
+            
+            //Hack : Force to take photo in portrait
+            //The camera is landscape native (https://devforums.apple.com/message/301160#301160)
+            UIInterfaceOrientation imgOrientation = resultImage.imageOrientation;
+            switch (imgOrientation) {
+                case UIImageOrientationUp:
+                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+                    break;
+                case UIImageOrientationDown:
+                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+                    break;
+                case UIImageOrientationLeft:
+                    resultImage = [UIImage imageWithCGImage:[resultImage CGImage] scale:[resultImage scale] orientation:UIImageOrientationRight];
+                    break;
+                default:
+                    break;
             }
             
             if (resultImage == nil) {

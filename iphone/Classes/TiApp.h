@@ -14,6 +14,7 @@
 #endif
 #import "TiRootViewController.h"
 #import "JavaScriptCore/TiContextRef.h"
+#import <CoreLocation/CoreLocation.h>
 
 extern BOOL applicationInMemoryPanic;
 
@@ -28,7 +29,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
  TiApp represents an instance of an application. There is always only one instance per application which could be accessed through <app> class method.
  @see app
  */
-@interface TiApp : TiHost <UIApplicationDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDownloadDelegate>
+@interface TiApp : TiHost <UIApplicationDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDownloadDelegate, CLLocationManagerDelegate>
 {
 	UIWindow *window;
 	UIImageView *loadView;
@@ -51,6 +52,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
 	NSString *userAgent;
 	NSString *remoteDeviceUUID;
 	NSData *remoteDeviceDataUUID;
+	CLLocationManager *locationManager;
 	id remoteNotificationDelegate;
 	NSDictionary* remoteNotification;
 	NSMutableDictionary* pendingCompletionHandlers;
@@ -63,6 +65,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
 	NSMutableArray *backgroundServices;
 	NSMutableArray *runningServices;
 	NSDictionary *localNotification;
+    BOOL didExitRegion;
 }
 
 @property (nonatomic) BOOL forceSplashAsSnapshot;
@@ -142,6 +145,7 @@ TI_INLINE void waitForMemoryPanicCleared()   //WARNING: This must never be run o
  */
 -(NSString*)remoteDeviceUUID;
 -(NSData*)remoteDeviceDataUUID;
+-(CLLocationManager*)locationManager;
 
 /**
  Tells application to show network activity indicator.

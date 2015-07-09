@@ -341,6 +341,7 @@ TI_INLINE void waitForMemoryPanicCleared();   //WARNING: This must never be run 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions_
 {
+	[self initializeLocationManager];
 	started = [NSDate timeIntervalSinceReferenceDate];
 	[TiExceptionHandler defaultExceptionHandler];
 
@@ -394,8 +395,191 @@ TI_INLINE void waitForMemoryPanicCleared();   //WARNING: This must never be run 
 	return YES;
 }
 
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
-{
+#pragma mark - Location Manager - Region Task Methods
+
+- (void)initializeLocationManager {
+    // Check to ensure location services are enabled
+    if(![CLLocationManager locationServicesEnabled]) {
+        NSLog(@"[INFO] %@",@"You need to enable location services to use this app.");
+        return;
+    }
+    
+    if (!locationManager) {
+        locationManager = [[CLLocationManager alloc] init];
+        locationManager.delegate = self;
+        
+        locationManager.distanceFilter = kCLLocationAccuracyBest;
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    }
+}
+
+-(BOOL)isAvailableHoursForPush:(NSString *) startTime closeTime:(NSString *) endTime {
+    
+    NSDateComponents *components = [[NSCalendar currentCalendar] components:NSHourCalendarUnit | NSMinuteCalendarUnit | NSSecondCalendarUnit fromDate:[NSDate date]];
+    NSInteger currHr = [components hour];
+    NSInteger currtMin = [components minute];
+    
+    int stHr = [[[startTime componentsSeparatedByString:@":"] objectAtIndex:0] intValue];
+    int stMin = [[[startTime componentsSeparatedByString:@":"] objectAtIndex:1] intValue];
+    int enHr = [[[endTime componentsSeparatedByString:@":"] objectAtIndex:0] intValue];
+    int enMin = [[[endTime componentsSeparatedByString:@":"] objectAtIndex:1] intValue];
+    
+    int formStTime = (stHr*60)+stMin;
+    int formEnTime = (enHr*60)+enMin;
+    
+     int nowTime = (int)(currHr*60)+(int)currtMin;
+
+    if(nowTime >= formStTime && nowTime <= formEnTime) {
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+-(BOOL)checkLastPushTime:(double)time withPeriod:(double)period {
+    NSTimeInterval interval = time;
+    NSDate *pushDate = [NSDate date];
+    pushDate = [NSDate dateWithTimeIntervalSince1970:interval];
+   
+    NSDate *now = [NSDate date];
+    NSTimeInterval distanceBetweenDates = [now timeIntervalSinceDate:pushDate];
+
+    if (distanceBetweenDates > period) {
+        return YES;
+    } else {
+        return NO;
+    }
+}
+
+-(BOOL)checkBeforeSendPush:(NSDictionary *)dict {
+    
+    BOOL resultat = [self isAvailableHoursForPush:[dict objectForKey:@"start_at"] closeTime:[dict objectForKey:@"end_at"]];
+    if([dict valueForKey:@"lastPush"] != nil && [dict valueForKey:@"lastPush"] != (id)[NSNull null] && resultat) {
+        double lastpush = [[dict valueForKey:@"lastPush"] doubleValue];
+        double period   = [[dict valueForKey:@"period"] doubleValue];
+        resultat        = [self checkLastPushTime:lastpush withPeriod:period];
+    }
+
+    if([dict valueForKey:@"numberPush"] != nil  && [dict valueForKey:@"numberPush"] != (id)[NSNull null] && resultat) {
+       int numberPush = [[dict valueForKey:@"numberPush"] intValue];
+       int max  = [[dict valueForKey:@"max"] intValue];
+       resultat = numberPush <= max ? YES : NO;
+    }
+    
+    return resultat;
+}
+
+-(void)locationManager:(CLLocationManager *)manager didEnterRegion:(CLRegion *)region {
+    didExitRegion = NO;
+    NSString *paramsSerialized = [[NSUserDefaults standardUserDefaults] objectForKey:@"geofences"];
+    if ([paramsSerialized length] > 0) {
+        NSData *jsonData = [paramsSerialized dataUsingEncoding:NSUTF8StringEncoding];
+        
+        NSError *error = nil;
+        NSMutableArray *paramsArray = [NSJSONSerialization JSONObjectWithData:jsonData options:NSJSONReadingMutableContainers error:&error];
+
+        if (!error && paramsArray.count > 0) {
+            NSInteger index = [region.identifier intValue];
+            NSMutableDictionary *params = [paramsArray objectAtIndex:index];
+             if(params != nil) {
+                if ([self checkBeforeSendPush:params]) {
+                    int64_t delayInSeconds = [[params valueForKey:@"duration"] doubleValue];
+                    dispatch_time_t delay = dispatch_time( DISPATCH_TIME_NOW, 9.0 * NSEC_PER_SEC );
+                    dispatch_after( delay, dispatch_get_main_queue(), ^{
+                        [self performSelector:@selector(handlePush:) withObject:[NSArray arrayWithObjects:region.identifier, params, paramsArray, nil]];
+                    });
+                    
+                } else {
+                    NSLog(@"Don't send notification for geofence");
+                }
+            }
+        }
+    }
+}
+
+-(void)handlePush:(NSArray*)args {
+
+    NSString *identifier = [args objectAtIndex:0];
+    NSInteger index = [identifier intValue];
+    NSMutableDictionary *params = [args objectAtIndex:1];
+    NSMutableArray *paramsArray = [args objectAtIndex:2];
+    UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+    
+    if (!didExitRegion && (state == UIApplicationStateBackground || state == UIApplicationStateInactive))
+    {
+//        NSString *urlRequest = [NSString stringWithFormat:@"url"];
+//        NSURLRequest *APIRequest = [NSURLRequest requestWithURL:[NSURL URLWithString:urlRequest]];
+//    
+//        [NSURLConnection sendAsynchronousRequest:APIRequest
+//                                           queue:[NSOperationQueue mainQueue]
+//                               completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+//                                   if (connectionError) {
+//                                       //error
+//                                   }
+//                                   else {
+//                                     //sucess
+//                                   }
+//                               }];
+//        
+        NSArray *arrayFromOfferId = [paramsArray valueForKey:@"offerId"];
+        NSString *offerId = [params valueForKey:@"offerId"];
+        NSTimeInterval timeStamp = [[NSDate date] timeIntervalSince1970];
+        NSNumber *timeStampObj = [NSNumber numberWithDouble: timeStamp];
+        int index = 0;
+        for (NSString *currentId in arrayFromOfferId) {
+            if ([currentId isEqualToString:offerId]) {
+                
+                NSMutableDictionary *newParams = [paramsArray objectAtIndex:index];
+                
+                //Set time of Push
+                [newParams setObject:timeStampObj forKey:@"lastPush"];
+                
+                //Set number of Push
+                int countPush = 1;
+                if([newParams valueForKey:@"numberPush"] != nil) {
+                    countPush = [[newParams valueForKey:@"numberPush"] intValue];
+                    countPush++;
+                }
+                NSNumber *newPush = [NSNumber numberWithInt:countPush];
+                [newParams setObject:newPush forKey:@"numberPush"];
+                
+                [paramsArray replaceObjectAtIndex:index withObject:newParams];
+            }
+            index++;
+        }
+
+        NSError *error;
+        NSData *jsonData  = [NSJSONSerialization dataWithJSONObject:paramsArray options:0 error:&error];
+        if (!jsonData) {
+            NSLog(@" error: %@", error);
+        } else {
+            NSString *paramsSerialized = [[NSString alloc] initWithBytes:[jsonData bytes] length:[jsonData length] encoding:NSUTF8StringEncoding];
+            [[NSUserDefaults standardUserDefaults] setObject:paramsSerialized forKey:@"geofences"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        }
+
+        UILocalNotification *notification = [[UILocalNotification alloc] init];
+        notification.fireDate  = [NSDate date];
+        NSTimeZone* timezone   = [NSTimeZone defaultTimeZone];
+        notification.timeZone  = timezone;
+        notification.alertBody = [params objectForKey:@"message"];
+        notification.soundName = UILocalNotificationDefaultSoundName;
+        
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+        [dict setObject:[params objectForKey:@"offerId"] forKey:@"offerId"];
+        [dict setObject:[params objectForKey:@"nodeId"] forKey:@"nodeId"];
+        [dict setObject:[params objectForKey:@"page"] forKey:@"page"];
+        notification.userInfo = dict;
+
+        [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    }
+}
+
+-(void)locationManager:(CLLocationManager *)manager didExitRegion:(CLRegion *)region {
+   didExitRegion = YES;
+}
+
+-(BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation {
 	[launchOptions removeObjectForKey:UIApplicationLaunchOptionsURLKey];
 	[launchOptions setObject:[url absoluteString] forKey:@"url"];
 	[launchOptions removeObjectForKey:UIApplicationLaunchOptionsSourceApplicationKey];
@@ -790,6 +974,9 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	
 	// resume any image loading
 	[[ImageLoader sharedLoader] resume];
+	for (UILocalNotification *notification in [[[UIApplication sharedApplication] scheduledLocalNotifications] copy]){
+		[[UIApplication sharedApplication] cancelLocalNotification:notification];
+	}
 }
 
 -(void)applicationDidEnterBackground:(UIApplication *)application
@@ -949,6 +1136,7 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 	RELEASE_TO_NIL(userAgent);
 	RELEASE_TO_NIL(remoteDeviceUUID);
 	RELEASE_TO_NIL(remoteDeviceDataUUID);
+	RELEASE_TO_NIL(locationManager);
 	RELEASE_TO_NIL(remoteNotification);
 	RELEASE_TO_NIL(splashScreenImage);
     if ([self debugMode]) {
@@ -980,6 +1168,11 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
 -(NSData*)remoteDeviceDataUUID
 {
 	return remoteDeviceDataUUID;
+}
+
+-(CLLocationManager*)locationManager
+{
+	return locationManager;
 }
 
 -(NSString*)sessionId

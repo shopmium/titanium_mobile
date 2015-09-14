@@ -434,9 +434,9 @@ public abstract class TiBaseActivity extends ActionBarActivity
 			getWindow().addFlags(windowFlags);
 		}
 
-		this.requestWindowFeature(Window.FEATURE_PROGRESS);
-		this.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		
+		// this.requestWindowFeature(Window.FEATURE_PROGRESS);
+		// this.requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		if (modal) {
 			if (Build.VERSION.SDK_INT < TiC.API_LEVEL_ICE_CREAM_SANDWICH) {
 				// This flag is deprecated in API 14. On ICS, the background is not blurred but straight black.
@@ -494,7 +494,7 @@ public abstract class TiBaseActivity extends ActionBarActivity
 		activityProxy = new ActivityProxy(this);
 
 		// Increment the reference count so we correctly clean up when all of our activities have been destroyed
-		KrollRuntime.incrementActivityRefCount();
+		//KrollRuntime.incrementActivityRefCount();
 
 		Intent intent = getIntent();
 		if (intent != null) {

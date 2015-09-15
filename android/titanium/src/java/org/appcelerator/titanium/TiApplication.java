@@ -431,12 +431,12 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		TiConfig.DEBUG = TiConfig.LOGD = appProperties.getBool("ti.android.debug", false);
 		USE_LEGACY_WINDOW = appProperties.getBool(PROPERTY_USE_LEGACY_WINDOW, false);
 
-		startExternalStorageMonitor();
+		// startExternalStorageMonitor();
 
-		// Register the default cache handler
-		responseCache = new TiResponseCache(getRemoteCacheDir(), this);
-		TiResponseCache.setDefault(responseCache);
-		KrollRuntime.setPrimaryExceptionHandler(new TiExceptionHandler());
+		// // Register the default cache handler
+		// responseCache = new TiResponseCache(getRemoteCacheDir(), this);
+		// TiResponseCache.setDefault(responseCache);
+		// KrollRuntime.setPrimaryExceptionHandler(new TiExceptionHandler());
 	}
 
 	private File getRemoteCacheDir()

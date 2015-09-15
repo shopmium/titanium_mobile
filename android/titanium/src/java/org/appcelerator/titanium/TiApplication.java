@@ -435,8 +435,8 @@ public abstract class TiApplication extends Application implements KrollApplicat
 
 		// Register the default cache handler
 		responseCache = new TiResponseCache(getRemoteCacheDir(), this);
-		// TiResponseCache.setDefault(responseCache);
-		// KrollRuntime.setPrimaryExceptionHandler(new TiExceptionHandler());
+		TiResponseCache.setDefault(responseCache);
+		KrollRuntime.setPrimaryExceptionHandler(new TiExceptionHandler());
 	}
 
 	private File getRemoteCacheDir()

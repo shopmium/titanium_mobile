@@ -494,7 +494,7 @@ public abstract class TiBaseActivity extends ActionBarActivity
 		activityProxy = new ActivityProxy(this);
 
 		// Increment the reference count so we correctly clean up when all of our activities have been destroyed
-		//KrollRuntime.incrementActivityRefCount();
+		KrollRuntime.incrementActivityRefCount();
 
 		Intent intent = getIntent();
 		if (intent != null) {

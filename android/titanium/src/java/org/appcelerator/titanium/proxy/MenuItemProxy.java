@@ -85,11 +85,11 @@ public class MenuItemProxy extends KrollProxy
 	{
 		this.item = item;
 
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			item.setOnActionExpandListener(new ActionExpandListener());
-		} else {
-			MenuItemCompat.setOnActionExpandListener(item, new CompatActionExpandListener());
-		}
+		// if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		// 	item.setOnActionExpandListener(new ActionExpandListener());
+		// } else {
+		MenuItemCompat.setOnActionExpandListener(item, new CompatActionExpandListener());
+		// }
 	}
 
 	@Override

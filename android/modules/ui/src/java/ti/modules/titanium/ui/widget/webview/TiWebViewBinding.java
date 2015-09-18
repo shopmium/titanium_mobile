@@ -117,7 +117,7 @@ public class TiWebViewBinding
 	private static StringBuilder readResourceFile(String fileName)
 	{
 		InputStream stream = TiWebViewBinding.class.getClassLoader().getResourceAsStream(
-			"ti/modules/titanium/ui/widget/webview/" + fileName);
+			"assets/ti/modules/titanium/ui/widget/webview/" + fileName);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
 		StringBuilder code = new StringBuilder();
 		try {

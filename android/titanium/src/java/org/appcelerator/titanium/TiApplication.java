@@ -46,7 +46,7 @@ import org.json.JSONObject;
 import ti.modules.titanium.TitaniumModule;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Application;
+import android.support.multidex.MultiDexApplication;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -62,7 +62,7 @@ import com.appcelerator.analytics.APSAnalytics.DeployType;
 /**
  * The main application entry point for all Titanium applications and services.
  */
-public abstract class TiApplication extends Application implements KrollApplication
+public abstract class TiApplication extends MultiDexApplication implements KrollApplication
 {
 	private static final String SYSTEM_UNIT = "system";
 	private static final String TAG = "TiApplication";

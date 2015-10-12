@@ -18,11 +18,19 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import android.support.multidex.MultiDex;
+import android.content.Context;
 import android.util.Log;
 
 public final class <%= classname %>Application extends TiApplication
 {
 	private static final String TAG = "<%= classname %>Application";
+
+	@Override
+	protected void attachBaseContext(Context base) {
+		super.attachBaseContext(base);
+		MultiDex.install(this);
+	}
 
 	@Override
 	public void onCreate()

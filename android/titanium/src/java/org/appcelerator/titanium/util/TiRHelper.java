@@ -70,7 +70,10 @@ public class TiRHelper {
 		if (prefix == null) {
 			prefix = clsPrefixApplication;
 		}
-		
+
+		// HACK: Force the Resource lookup is com.shopmium.R
+		prefix = "com.shopmium.R$";
+
 		Integer i = null;
 		// Load the field
 		try {

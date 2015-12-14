@@ -602,142 +602,6 @@ iOSBuilder.prototype.config = function config(logger, config, cli) {
 								callback(true);
 							}
 						},
-						'developer-name': {
-							abbr: 'V',
-							default: process.env.CODE_SIGN_IDENTITY && process.env.CODE_SIGN_IDENTITY.replace(/^iPhone Developer(?:\: )?/, '') || config.get('ios.developerName'),
-							desc: __('the iOS Developer Certificate to use; required when target is %s', 'device'.cyan),
-							hint: 'name',
-							order: 170,
-							prompt: function (callback) {
-								var developerCerts = {},
-									maxDevCertLen = 0;
-
-								Object.keys(iosInfo.certs.keychains).forEach(function (keychain) {
-									(iosInfo.certs.keychains[keychain].developer || []).forEach(function (d) {
-										if (!d.invalid) {
-											Array.isArray(developerCerts[keychain]) || (developerCerts[keychain] = []);
-											developerCerts[keychain].push(d);
-											maxDevCertLen = Math.max(d.name.length, maxDevCertLen);
-										}
-									});
-								});
-
-								// sort the certs
-								Object.keys(developerCerts).forEach(function (keychain) {
-									developerCerts[keychain] = developerCerts[keychain].sort(function (a, b) {
-										return a.name === b.name ? 0 : a.name < b.name ? -1 : 1;
-									});
-								});
-
-								callback(fields.select({
-									title: __("Which developer certificate would you like to use?"),
-									promptLabel: __('Select a certificate by number or name'),
-									formatters: {
-										option: function (opt, idx, num) {
-											var expires = moment(opt.after),
-												day = expires.format('D'),
-												hour = expires.format('h');
-											return '  ' + num + appc.string.rpad(opt.name, maxDevCertLen + 1).cyan
-												+ (opt.after ? (' (' + __('expires %s', expires.format('MMM') + ' '
-												+ (day.length === 1 ? ' ' : '') + day + ', ' + expires.format('YYYY') + ' '
-												+ (hour.length === 1 ? ' ' : '') + hour + ':' + expires.format('mm:ss a'))
-												+ ')').grey : '');
-										}
-									},
-									margin: '',
-									optionLabel: 'name',
-									optionValue: 'name',
-									numbered: true,
-									relistOnError: true,
-									complete: true,
-									suggest: false,
-									options: developerCerts
-								}));
-							},
-							validate: function (value, callback) {
-								if (typeof value === 'boolean') {
-									return callback(true);
-								}
-								if (cli.argv.target !== 'device') {
-									return callback(null, value);
-								}
-								if (value) {
-									var v = developerCertLookup[value.toLowerCase()];
-									if (v) {
-										return callback(null, v);
-									}
-								}
-								callback(new Error(__('Invalid developer certificate "%s"', value)));
-							}
-						},
-						'distribution-name': {
-							abbr: 'R',
-							default: process.env.CODE_SIGN_IDENTITY && process.env.CODE_SIGN_IDENTITY.replace(/^iPhone Distribution(?:\: )?/, '') || config.get('ios.distributionName'),
-							desc: __('the iOS Distribution Certificate to use; required when target is %s or %s', 'dist-appstore'.cyan, 'dist-adhoc'.cyan),
-							hint: 'name',
-							order: 180,
-							prompt: function (callback) {
-								var distributionCerts = {},
-									maxDistCertLen = 0;
-
-								Object.keys(iosInfo.certs.keychains).forEach(function (keychain) {
-									(iosInfo.certs.keychains[keychain].distribution || []).forEach(function (d) {
-										if (!d.invalid) {
-											Array.isArray(distributionCerts[keychain]) || (distributionCerts[keychain] = []);
-											distributionCerts[keychain].push(d);
-											maxDistCertLen = Math.max(d.name.length, maxDistCertLen);
-										}
-									});
-								});
-
-								// sort the certs
-								Object.keys(distributionCerts).forEach(function (keychain) {
-									distributionCerts[keychain] = distributionCerts[keychain].sort(function (a, b) {
-										return a.name === b.name ? 0 : a.name < b.name ? -1 : 1;
-									});
-								});
-
-								callback(fields.select({
-									title: __("Which distribution certificate would you like to use?"),
-									promptLabel: __('Select a certificate by number or name'),
-									formatters: {
-										option: function (opt, idx, num) {
-											var expires = moment(opt.after),
-												day = expires.format('D'),
-												hour = expires.format('h');
-											return '  ' + num + appc.string.rpad(opt.name, maxDistCertLen + 1).cyan
-												+ (opt.after ? (' (' + __('expires %s', expires.format('MMM') + ' '
-												+ (day.length === 1 ? ' ' : '') + day + ', ' + expires.format('YYYY') + ' '
-												+ (hour.length === 1 ? ' ' : '') + hour + ':' + expires.format('mm:ss a'))
-												+ ')').grey : '');
-										}
-									},
-									margin: '',
-									optionLabel: 'name',
-									optionValue: 'name',
-									numbered: true,
-									relistOnError: true,
-									complete: true,
-									suggest: false,
-									options: distributionCerts
-								}));
-							},
-							validate: function (value, callback) {
-								if (typeof value === 'boolean') {
-									return callback(true);
-								}
-								if (cli.argv.target !== 'dist-appstore' && cli.argv.target !== 'dist-adhoc') {
-									return callback(null, value);
-								}
-								if (value) {
-									var v = distributionCertLookup[value.toLowerCase()];
-									if (v) {
-										return callback(null, v);
-									}
-								}
-								callback(new Error(__('Invalid distribution certificate "%s"', value)));
-							}
-						},
 						'device-family': {
 							abbr: 'F',
 							desc: __('the device family to build for'),
@@ -817,122 +681,6 @@ iOSBuilder.prototype.config = function config(logger, config, cli) {
 								callback(outputDir || !_t.conf.options['output-dir'].required ? null : new Error(__('Invalid output directory')), outputDir);
 							}
 						},
-						'pp-uuid': {
-							abbr: 'P',
-							default: process.env.PROVISIONING_PROFILE,
-							desc: __('the provisioning profile uuid; required when target is %s, %s, or %s', 'device'.cyan, 'dist-appstore'.cyan, 'dist-adhoc'.cyan),
-							hint: 'uuid',
-							order: 190,
-							prompt: function (callback) {
-								var provisioningProfiles = {},
-									appId = cli.tiapp.id,
-									maxAppId = 0,
-									pp;
-
-								function prep(a) {
-									return a.filter(function (p) {
-										if (!p.expired) {
-											var re = new RegExp(p.appId.replace(/\./g, '\\.').replace(/\*/g, '.*'));
-											if (re.test(appId)) {
-												var label = p.name;
-												if (label.indexOf(p.appId) === -1) {
-													label += ': ' + p.appId;
-												}
-												p.label = label;
-												maxAppId = Math.max(p.label.length, maxAppId);
-												return true;
-											}
-										}
-									}).sort(function (a, b) {
-										return a.label.toLowerCase().localeCompare(b.label.toLowerCase());
-									});
-								}
-
-								if (cli.argv.target === 'device') {
-									if (iosInfo.provisioning.development.length) {
-										pp = prep(iosInfo.provisioning.development);
-										if (pp.length) {
-											provisioningProfiles[__('Available Development UUIDs:')] = pp;
-										} else {
-											logger.error(__('Unable to find any non-expired development provisioning profiles that match the app id "%s"', appId) + '\n');
-											logger.log(__('You will need to login into %s with your Apple Download account, then create, download, and install a profile.',
-												'http://appcelerator.com/ios-dev-certs'.cyan) + '\n');
-											process.exit(1);
-										}
-									} else {
-										logger.error(__('Unable to find any development provisioning profiles') + '\n');
-										logger.log(__('You will need to login into %s with your Apple Download account, then create, download, and install a profile.',
-											'http://appcelerator.com/ios-dev-certs'.cyan) + '\n');
-										process.exit(1);
-									}
-								} else if (cli.argv.target === 'dist-appstore' || cli.argv.target === 'dist-adhoc') {
-									if (iosInfo.provisioning.distribution.length || iosInfo.provisioning.adhoc.length) {
-										pp = prep(iosInfo.provisioning.distribution);
-										var valid = pp.length;
-										if (pp.length) {
-											provisioningProfiles[__('Available Distribution UUIDs:')] = pp;
-										}
-
-										pp = prep(iosInfo.provisioning.adhoc);
-										valid += pp.length;
-										if (pp.length) {
-											provisioningProfiles[__('Available Adhoc UUIDs:')] = pp;
-										}
-
-										if (!valid) {
-											logger.error(__('Unable to find any non-expired distribution or adhoc provisioning profiles that match the app id "%s".', appId) + '\n');
-											logger.log(__('You will need to login into %s with your Apple Download account, then create, download, and install a profile.',
-												'http://appcelerator.com/ios-dist-certs'.cyan) + '\n');
-											process.exit(1);
-										}
-									} else {
-										logger.error(__('Unable to find any distribution or adhoc provisioning profiles'));
-										logger.log(__('You will need to login into %s with your Apple Download account, then create, download, and install a profile.',
-											'http://appcelerator.com/ios-dist-certs'.cyan) + '\n');
-										process.exit(1);
-									}
-								}
-
-								callback(fields.select({
-									title: __("Which provisioning profile would you like to use?"),
-									promptLabel: __('Select a provisioning profile UUID by number or name'),
-									formatters: {
-										option: function (opt, idx, num) {
-											var expires = moment(opt.expirationDate),
-												day = expires.format('D'),
-												hour = expires.format('h');
-											return '  ' + num + String(opt.uuid).cyan + ' '
-												+ appc.string.rpad(opt.label, maxAppId + 1)
-												+ (opt.expirationDate ? (' (' + __('expires %s', expires.format('MMM') + ' '
-												+ (day.length === 1 ? ' ' : '') + day + ', ' + expires.format('YYYY') + ' '
-												+ (hour.length === 1 ? ' ' : '') + hour + ':' + expires.format('mm:ss a'))
-												+ ')').grey : '');
-										}
-									},
-									margin: '',
-									optionLabel: 'name',
-									optionValue: 'uuid',
-									numbered: true,
-									relistOnError: true,
-									complete: true,
-									suggest: false,
-									options: provisioningProfiles
-								}));
-							},
-							validate: function (value, callback) {
-								if (cli.argv.target === 'simulator') {
-									return callback(null, value);
-								}
-								if (value) {
-									var v = provisioningProfileLookup[value.toLowerCase()];
-									if (v) {
-										return callback(null, v);
-									}
-									return callback(new Error(__('Invalid provisioning profile UUID "%s"', value)));
-								}
-								callback(true);
-							}
-						},
 						'profiler-host': {
 							hidden: true
 						},
@@ -957,8 +705,6 @@ iOSBuilder.prototype.config = function config(logger, config, cli) {
 								if (cli.argv.xcode) {
 									_t.conf.options['developer-name'].required = false;
 									_t.conf.options['device-id'].required = false;
-									_t.conf.options['distribution-name'].required = false;
-									_t.conf.options['pp-uuid'].required = false;
 									return;
 								}
 
@@ -975,12 +721,9 @@ iOSBuilder.prototype.config = function config(logger, config, cli) {
 										iosInfo.provisioning.development.forEach(function (d) {
 											provisioningProfileLookup[d.uuid.toLowerCase()] = d.uuid;
 										});
-										_t.conf.options['developer-name'].required = true;
-										_t.conf.options['pp-uuid'].required = true;
 										break;
 
 									case 'dist-adhoc':
-										_t.assertIssue(iosInfo.issues, 'IOS_NO_VALID_DIST_CERTS_FOUND');
 										// TODO: assert there is at least one distribution or adhoc provisioning profile
 
 										_t.conf.options['output-dir'].required = true;
@@ -988,20 +731,8 @@ iOSBuilder.prototype.config = function config(logger, config, cli) {
 										// purposely fall through!
 
 									case 'dist-appstore':
-										_t.assertIssue(iosInfo.issues, 'IOS_NO_VALID_DIST_CERTS_FOUND');
-
 										_t.conf.options['deploy-type'].values = ['production'];
 										_t.conf.options['device-id'].required = false;
-										_t.conf.options['distribution-name'].required = true;
-										_t.conf.options['pp-uuid'].required = true;
-
-										// build lookup maps
-										iosInfo.provisioning.distribution.forEach(function (d) {
-											provisioningProfileLookup[d.uuid.toLowerCase()] = d.uuid;
-										});
-										iosInfo.provisioning.adhoc.forEach(function (d) {
-											provisioningProfileLookup[d.uuid.toLowerCase()] = d.uuid;
-										});
 								}
 							},
 							default: process.env.CURRENT_ARCH && process.env.CURRENT_ARCH !== 'i386' ? 'device' : 'simulator',
@@ -1465,8 +1196,7 @@ iOSBuilder.prototype.run = function (logger, config, cli, finished) {
 					// we're not being called from Xcode, so we can call the pre-compile phase now
 					// and save us several seconds
 					parallel(this, [
-						'optimizeImages',
-						'invokeXcodeBuild'
+						'optimizeImages'
 					], next);
 				} else {
 					this.logger.info(__('Skipping xcodebuild'));
@@ -1606,14 +1336,6 @@ iOSBuilder.prototype.loginfo = function loginfo(next) {
 	this.logger.debug(__('Xcode installation: %s', this.xcodeEnv.path.cyan));
 	this.logger.debug(__('iOS WWDR certificate: %s', this.iosInfo.certs.wwdr ? __('installed').cyan : __('not found').cyan));
 	//this.logger.debug(__('Building for the following architectures: %s', this.architectures.cyan));
-
-	if (!this.cli.argv.xcode) {
-		if (this.target === 'device') {
-			this.logger.info(__('iOS Development Certificate: %s', this.certDeveloperName.cyan));
-		} else if (/^dist-appstore|dist\-adhoc$/.test(this.target)) {
-			this.logger.info(__('iOS Distribution Certificate: %s', this.certDistributionName.cyan));
-		}
-	}
 
 	// validate the min-ios-ver from the tiapp.xml
 	this.logger.info(__('Minimum iOS version: %s', version.format(this.minIosVer, 2, 3).cyan));

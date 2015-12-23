@@ -1479,7 +1479,7 @@ public abstract class TiBaseActivity extends ActionBarActivity
 			if (app != null) {
 				TiRootActivity rootActivity = app.getRootActivity();
 				if (rootActivity != null && !(rootActivity.equals(this)) && !rootActivity.isFinishing()) {
-					rootActivity.finish();
+					//rootActivity.finish();
 				} else if (rootActivity == null && !app.isRestartPending()) {
 					// When the root activity has been killed and garbage collected and the app is not scheduled to restart,
 					// we need to force finish the root activity while this activity has an intent to finish root.

@@ -8,6 +8,7 @@ package org.appcelerator.titanium;
 
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Stack;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -1087,11 +1088,15 @@ public abstract class TiBaseActivity extends ActionBarActivity
 	 */
 	protected void onResume()
 	{
+
 		inForeground = true;
 		if (activityProxy != null) {
 			dispatchCallback(TiC.PROPERTY_ON_RESUME, null);
 		}
 		super.onResume();
+
+		updateLocale();
+
 		if (isFinishing()) {
 			return;
 		}
@@ -1134,6 +1139,19 @@ public abstract class TiBaseActivity extends ActionBarActivity
 		//String deployType = tiApp.getAppProperties().getString("ti.deploytype", "unknown");
 		if(TiApplication.getInstance().isAnalyticsEnabled()){
 			analytics.sendAppForegroundEvent();
+		}
+	}
+
+	public void updateLocale() 
+	{
+		String language = getSharedPreferences("titanium", MODE_PRIVATE).getString("market_language", null);
+
+		if (language != null) 
+		{
+			Locale locale = new Locale(language);
+        	Configuration configuration = new Configuration();
+        	configuration.locale = locale;
+        	getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());
 		}
 	}
 

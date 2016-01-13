@@ -1148,7 +1148,13 @@ public abstract class TiBaseActivity extends ActionBarActivity
 
 		if (language != null) 
 		{
-			Locale locale = new Locale(language);
+			String[] localeParts = language.split("_");
+			Locale locale;
+			if(localeParts.length == 2) {
+				locale = new Locale(localeParts[0], localeParts[1]);
+			} else {
+				locale = new Locale(language);
+			}
         	Configuration configuration = new Configuration();
         	configuration.locale = locale;
         	getResources().updateConfiguration(configuration, getResources().getDisplayMetrics());

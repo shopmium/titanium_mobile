@@ -1150,7 +1150,7 @@ public abstract class TiBaseActivity extends ActionBarActivity
 		{
 			String[] localeParts = language.split("_", 2);
 			Locale locale;
-			if (localeParts.length == 2 && localeParts[1].length > 0) {
+			if (localeParts.length == 2 && localeParts[1].length() > 0) {
 				locale = new Locale(localeParts[0], localeParts[1]);
 			} else {
 				locale = new Locale(localeParts[0]);

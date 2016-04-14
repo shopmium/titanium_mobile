@@ -251,6 +251,11 @@ public class AppModule extends KrollModule implements SensorEventListener
 		return proximityState;
 	}
 
+	@Kroll.method
+	public void fireNativeEvent(String eventName) {
+		TiApplication.getInstance().fireNativeEvent(eventName);
+	}
+
 	/**
 	 * @see org.appcelerator.kroll.KrollProxy#eventListenerAdded(java.lang.String, int,
 	 *      org.appcelerator.kroll.KrollProxy)

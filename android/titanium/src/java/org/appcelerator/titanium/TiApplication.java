@@ -112,6 +112,7 @@ public abstract class TiApplication extends MultiDexApplication implements Kroll
 	public static AtomicBoolean isActivityTransition = new AtomicBoolean(false);
 	protected static ArrayList<ActivityTransitionListener> activityTransitionListeners = new ArrayList<ActivityTransitionListener>();
 	protected static TiWeakList<Activity> activityStack = new TiWeakList<Activity>();
+	private EventBusJava eventBusJava;
 
 	public static interface ActivityTransitionListener
 	{
@@ -581,6 +582,14 @@ public abstract class TiApplication extends MultiDexApplication implements Kroll
 		return handled;
 	}
 
+	public void fireNativeEvent(String eventName) {
+		Log.e("testing", "fire event in sdk " + eventName);
+
+		if (eventBusJava != null) {
+			eventBusJava.call(eventName);
+		}
+	}
+
 	/**
 	 * @return the app's properties, which are listed in tiapp.xml.
 	 * App properties can also be set at runtime by the application in Javascript.
@@ -874,5 +883,9 @@ public abstract class TiApplication extends MultiDexApplication implements Kroll
 	}
 
 	public abstract void verifyCustomModules(TiRootActivity rootActivity);
+
+	public void setEventBusJava(EventBusJava eventBusJava) {
+		this.eventBusJava = eventBusJava;
+	}
 }
 
